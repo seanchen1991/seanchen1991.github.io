@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on Sean Chen&#39;s Blog</title>
+    <link>https://seanchen1991.github.io/tags/</link>
+    <description>Recent content in Tags on Sean Chen&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 23 Jan 2021 01:00:00 -0600</lastBuildDate>
+    
+	<atom:link href="https://seanchen1991.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Data Structures</title>
+      <link>https://seanchen1991.github.io/tags/data-structures/</link>
+      <pubDate>Sat, 23 Jan 2021 01:00:00 -0600</pubDate>
+      
+      <guid>https://seanchen1991.github.io/tags/data-structures/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Python</title>
+      <link>https://seanchen1991.github.io/tags/python/</link>
+      <pubDate>Sat, 23 Jan 2021 01:00:00 -0600</pubDate>
+      
+      <guid>https://seanchen1991.github.io/tags/python/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Rust</title>
+      <link>https://seanchen1991.github.io/tags/rust/</link>
+      <pubDate>Sat, 23 Jan 2021 01:00:00 -0600</pubDate>
+      
+      <guid>https://seanchen1991.github.io/tags/rust/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Teaching</title>
+      <link>https://seanchen1991.github.io/tags/teaching/</link>
+      <pubDate>Sat, 23 Jan 2021 01:00:00 -0600</pubDate>
+      
+      <guid>https://seanchen1991.github.io/tags/teaching/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Synchronization Primitives</title>
+      <link>https://seanchen1991.github.io/tags/synchronization-primitives/</link>
+      <pubDate>Fri, 27 Nov 2020 20:00:00 -0600</pubDate>
+      
+      <guid>https://seanchen1991.github.io/tags/synchronization-primitives/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>The Little Book of Semaphores</title>
+      <link>https://seanchen1991.github.io/tags/the-little-book-of-semaphores/</link>
+      <pubDate>Fri, 27 Nov 2020 20:00:00 -0600</pubDate>
+      
+      <guid>https://seanchen1991.github.io/tags/the-little-book-of-semaphores/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Open Source</title>
+      <link>https://seanchen1991.github.io/tags/open-source/</link>
+      <pubDate>Tue, 18 Aug 2020 21:40:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/tags/open-source/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Exercism</title>
+      <link>https://seanchen1991.github.io/tags/exercism/</link>
+      <pubDate>Mon, 20 Jul 2020 16:20:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/tags/exercism/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Haskell</title>
+      <link>https://seanchen1991.github.io/tags/haskell/</link>
+      <pubDate>Mon, 20 Jul 2020 16:20:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/tags/haskell/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Introspection</title>
+      <link>https://seanchen1991.github.io/tags/introspection/</link>
+      <pubDate>Wed, 27 May 2020 11:50:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/tags/introspection/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

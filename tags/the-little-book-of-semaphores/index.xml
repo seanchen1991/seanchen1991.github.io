@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>The Little Book of Semaphores on Sean Chen&#39;s Blog</title>
+    <link>https://seanchen1991.github.io/tags/the-little-book-of-semaphores/</link>
+    <description>Recent content in The Little Book of Semaphores on Sean Chen&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 27 Nov 2020 20:00:00 -0600</lastBuildDate>
+    
+	<atom:link href="https://seanchen1991.github.io/tags/the-little-book-of-semaphores/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Implementing Synchronization Primitives in Rust: Semaphores</title>
+      <link>https://seanchen1991.github.io/posts/sync-primitives-semaphores/</link>
+      <pubDate>Fri, 27 Nov 2020 20:00:00 -0600</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/sync-primitives-semaphores/</guid>
+      <description>I recently stumbled upon Allen Downey’s The Little Book of Semaphores, which is a short, sweet, and to-the-point textbook on the topic of synchronization.
+Naturally, reading through the book inspired me to implement these synchronization primitives and problems in Rust.
+I hope others find this exploration interesting, insightful, and/or helpful! 🙂
+ Implementing synchronization primitives in Rust in a safe fashion is a bit strange in a circular kind of way.</description>
+    </item>
+    
+  </channel>
+</rss>

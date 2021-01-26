@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rust on Sean Chen&#39;s Blog</title>
+    <link>https://seanchen1991.github.io/tags/rust/</link>
+    <description>Recent content in Rust on Sean Chen&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 23 Jan 2021 01:00:00 -0600</lastBuildDate>
+    
+	<atom:link href="https://seanchen1991.github.io/tags/rust/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Implementing an LRU Cache in Rust</title>
+      <link>https://seanchen1991.github.io/posts/lru-cache/</link>
+      <pubDate>Sat, 23 Jan 2021 01:00:00 -0600</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/lru-cache/</guid>
+      <description>This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The [chapter][traits-chapter] in the official Rust book is as good a place as any 🙂
+ LRU caches are one of my favorite data structures to teach. One way of implementing an LRU cache (in Python, the language that I teach in) requires combining two separate data structures: a hash map in order to enable efficient access via hashing of keys, and a doubly-linked list in order to maintain the ordering of cache elements.</description>
+    </item>
+    
+    <item>
+      <title>Implementing Synchronization Primitives in Rust: Semaphores</title>
+      <link>https://seanchen1991.github.io/posts/sync-primitives-semaphores/</link>
+      <pubDate>Fri, 27 Nov 2020 20:00:00 -0600</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/sync-primitives-semaphores/</guid>
+      <description>I recently stumbled upon Allen Downey’s The Little Book of Semaphores, which is a short, sweet, and to-the-point textbook on the topic of synchronization.
+Naturally, reading through the book inspired me to implement these synchronization primitives and problems in Rust.
+I hope others find this exploration interesting, insightful, and/or helpful! 🙂
+ Implementing synchronization primitives in Rust in a safe fashion is a bit strange in a circular kind of way.</description>
+    </item>
+    
+    <item>
+      <title>Haskell::From(Rust) I: Infix Notation and Currying</title>
+      <link>https://seanchen1991.github.io/posts/haskell-from-rust-i/</link>
+      <pubDate>Mon, 20 Jul 2020 16:20:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/haskell-from-rust-i/</guid>
+      <description>Prelude    I’ve been meaning to learn Haskell for a while now. Most people who write Rust likely have had at least a background-level exposure to Haskell (if they hadn’t already encountered/learned the language on their own prior). Since the language (along with ML and possibly OCaml?) had such an effect on Rust’s development, digging into it will likely pay dividends in the form of improving my understanding of Rust.</description>
+    </item>
+    
+    <item>
+      <title>Some Learnings from Implementing a Normalizing Rust Representer</title>
+      <link>https://seanchen1991.github.io/posts/rust-representer/</link>
+      <pubDate>Mon, 13 Jul 2020 11:50:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/rust-representer/</guid>
+      <description>I’ve been helping out and contributing to exercism.io for the past few months. As an open source platform for learning programming languages that supports Rust, Exercism aligns very well with all the things I’m currently passionate about: open source, teaching, and Rust.
+One of the most challenging hurdles the Exercism platform faces is the fact that students who opt in to receive mentor feedback on their work have to wait for a live person to get around to reviewing their submission.</description>
+    </item>
+    
+    <item>
+      <title>The Story of Tail Call Optimizations in Rust</title>
+      <link>https://seanchen1991.github.io/posts/tco-story/</link>
+      <pubDate>Wed, 03 Jun 2020 20:00:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/tco-story/</guid>
+      <description>I think tail call optimizations are pretty neat, particularly how they work to solve a fundamental issue with how recursive function calls execute. Functional languages like Haskell and those of the Lisp family, as well as logic languages (of which Prolog is probably the most well-known exemplar) emphasize recursive ways of thinking about problems. These languages have much to gain performance-wise by taking advantage of tail call optimizations.
+I won&amp;rsquo;t be describing what tail calls are in this post.</description>
+    </item>
+    
+    <item>
+      <title>Takeaways from My Initial Exposure to Rust</title>
+      <link>https://seanchen1991.github.io/posts/takeaways-i/</link>
+      <pubDate>Wed, 27 May 2020 11:50:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/takeaways-i/</guid>
+      <description>My journey into learning Rust and getting into its wonderful open source community has been, on the whole, pretty stop-and-go.
+First Encounter    I was introduced to Rust way back in 2014, probably around the time when it was around version 0.8 or so. I was a student in Hack Reactor’s sixteenth cohort, learning JavaScript, Angular, and Node.js in preparation for taking on a role as a web developer.</description>
+    </item>
+    
+  </channel>
+</rss>

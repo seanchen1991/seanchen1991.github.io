@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Teaching on Sean Chen&#39;s Blog</title>
+    <link>https://seanchen1991.github.io/tags/teaching/</link>
+    <description>Recent content in Teaching on Sean Chen&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 23 Jan 2021 01:00:00 -0600</lastBuildDate>
+    
+	<atom:link href="https://seanchen1991.github.io/tags/teaching/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Implementing an LRU Cache in Rust</title>
+      <link>https://seanchen1991.github.io/posts/lru-cache/</link>
+      <pubDate>Sat, 23 Jan 2021 01:00:00 -0600</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/lru-cache/</guid>
+      <description>This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The [chapter][traits-chapter] in the official Rust book is as good a place as any 🙂
+ LRU caches are one of my favorite data structures to teach. One way of implementing an LRU cache (in Python, the language that I teach in) requires combining two separate data structures: a hash map in order to enable efficient access via hashing of keys, and a doubly-linked list in order to maintain the ordering of cache elements.</description>
+    </item>
+    
+  </channel>
+</rss>

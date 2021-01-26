@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Language" content="en">
+    
+
+    <meta name="author" content="Sean Chen">
+    <meta name="description" content="I think tail call optimizations are pretty neat, particularly how they work to solve a fundamental issue with how recursive function calls execute. Functional languages like Haskell and those of the Lisp family, as well as logic languages (of which Prolog is probably the most well-known exemplar) emphasize recursive ways of thinking about problems. These languages have much to gain performance-wise by taking advantage of tail call optimizations.
+I won&rsquo;t be describing what tail calls are in this post.">
+    <meta name="keywords" content="blog,personal,developer,teacher">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="The Story of Tail Call Optimizations in Rust"/>
+<meta name="twitter:description" content="I think tail call optimizations are pretty neat, particularly how they work to solve a fundamental issue with how recursive function calls execute. Functional languages like Haskell and those of the Lisp family, as well as logic languages (of which Prolog is probably the most well-known exemplar) emphasize recursive ways of thinking about problems. These languages have much to gain performance-wise by taking advantage of tail call optimizations.
+I won&rsquo;t be describing what tail calls are in this post."/>
+
+    <meta property="og:title" content="The Story of Tail Call Optimizations in Rust" />
+<meta property="og:description" content="I think tail call optimizations are pretty neat, particularly how they work to solve a fundamental issue with how recursive function calls execute. Functional languages like Haskell and those of the Lisp family, as well as logic languages (of which Prolog is probably the most well-known exemplar) emphasize recursive ways of thinking about problems. These languages have much to gain performance-wise by taking advantage of tail call optimizations.
+I won&rsquo;t be describing what tail calls are in this post." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://seanchen1991.github.io/posts/tco-story/" />
+<meta property="article:published_time" content="2020-06-03T20:00:00-07:00" />
+<meta property="article:modified_time" content="2020-06-03T20:00:00-07:00" />
+
+
+    <title>
+  The Story of Tail Call Optimizations in Rust · Sean Chen&#39;s Blog
+</title>
+
+    
+      <link rel="canonical" href="https://seanchen1991.github.io/posts/tco-story/">
+    
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://seanchen1991.github.io/fonts/forkawesome-webfont.woff2?v=1.1.7" as="font" type="font/woff2" crossorigin>
+
+    
+      
+      
+      <link rel="stylesheet" href="https://seanchen1991.github.io/css/coder.min.f48a4da9bd32cecaff90717ae85529411dd087c10fc0dfca9c9c329c7327e5e1.css" integrity="sha256-9IpNqb0yzsr/kHF66FUpQR3Qh8EPwN/KnJwynHMn5eE=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://seanchen1991.github.io/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://seanchen1991.github.io/images/favicon-16x16.png" sizes="16x16">
+
+    <link rel="apple-touch-icon" href="https://seanchen1991.github.io/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://seanchen1991.github.io/images/apple-touch-icon.png">
+
+    
+
+    <meta name="generator" content="Hugo 0.71.1" />
+  </head>
+
+  
+  
+  <body class="colorscheme-light"
+        onload=""
+  >
+    
+<div class="float-container">
+    <a id="dark-mode-toggle" class="colorscheme-toggle">
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+
+
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://seanchen1991.github.io/">
+      Sean Chen&#39;s Blog
+    </a>
+    
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://seanchen1991.github.io/posts/">Blog</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://seanchen1991.github.io/about/">About</a>
+            </li>
+          
+        
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">
+            <a class="title-link" href="https://seanchen1991.github.io/posts/tco-story/">
+              The Story of Tail Call Optimizations in Rust
+            </a>
+          </h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime='2020-06-03T20:00:00-07:00'>
+                June 3, 2020
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              7-minute read
+            </span>
+          </div>
+          
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <a href="https://seanchen1991.github.io/tags/rust/">Rust</a>
+      <span class="separator">•</span>
+    <a href="https://seanchen1991.github.io/tags/open-source/">Open Source</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        <p>I think tail call optimizations are pretty neat, particularly how they work to solve a fundamental issue with how recursive function calls execute. Functional languages like Haskell and those of the Lisp family, as well as logic languages (of which Prolog is probably the most well-known exemplar) emphasize recursive ways of thinking about problems. These languages have much to gain performance-wise by taking advantage of tail call optimizations.</p>
+
+<div class="notices info" >
+    <p>I won&rsquo;t be describing what tail calls are in this post. Here are a number of good resources to refer to:</p>
+<ul>
+<li>The YouTube channel Computerphile has a <a href="https://youtu.be/_JtPhF8MshA">video</a> where they walk through examples of tail-recursive functions in painstaking detail.</li>
+<li>A detailed explanation on <a href="https://stackoverflow.com/questions/310974/what-is-tail-call-optimization">Stack Overflow</a> on the concept.</li>
+</ul>
+
+</div>
+<p>With the recent trend over the last few years of emphasizing functional paradigms and idioms in the programming community, you would think that tail call optimizations show up in many compiler/interpreter implementations. And yet, it turns out that many of these popular languages <em>don’t</em> implement tail call optimization. JavaScript had it up till a few years ago, when it removed support for it <a href="https://stackoverflow.com/questions/42788139/es6-tail-recursion-optimisation-stack-overflow">1</a>. Python doesn’t support it <a href="http://neopythonic.blogspot.com/2009/04/final-words-on-tail-calls.html">2</a>. Neither does Rust.</p>
+<p>Before we dig into the story of why that is the case, let’s briefly summarize the idea behind tail call optimizations.</p>
+<h2 id="how-tail-call-optimizations-work-in-theory">
+  How Tail Call Optimizations Work (In Theory)
+  <a class="heading-link" href="#how-tail-call-optimizations-work-in-theory">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>Tail-recursive functions, if run in an environment that doesn’t support TCO, exhibits linear memory growth relative to the function’s input size. This is because each recursive call allocates an additional stack frame to the call stack. The goal of TCO is to eliminate this linear memory usage by running tail-recursive functions in such a way that a new stack frame doesn’t need to be allocated for each call.</p>
+<p>One way to achieve this is to have the compiler, once it realizes it needs to perform TCO, transform the tail-recursive function execution to use an iterative loop. This means that the result of the tail-recursive function is calculated using just a single stack frame. Ta-da! Constant memory usage.</p>
+<p><img src="pseudocode.jpg" alt="Drawing Pseudocode"></p>
+<p>With that, let’s get back to the question of why Rust doesn’t exhibit TCO.</p>
+<h2 id="going-through-the-rust-wayback-machine">
+  Going Through the Rust Wayback Machine
+  <a class="heading-link" href="#going-through-the-rust-wayback-machine">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>The earliest references to tail call optimizations in Rust I could dig up go all the way back to the Rust project’s inception. I found <a href="https://mail.mozilla.org/pipermail/rust-dev/2013-April/003557.html">this</a> mailing list thread from 2013, where Graydon Hoare enumerates his points for why he didn’t think tail call optimizations belonged in Rust:</p>
+<p><img src="mailing-list.jpg" alt="Mailing list"></p>
+<p>That mailing list thread refers to <a href="https://github.com/rust-lang/rust/issues/217">this</a> GitHub issue, circa 2011, when the initial authors of the project were grappling with how to implement TCO in the then-budding compiler. The heart of the problem seemed to be due to incompatibilities with LLVM at the time; to be fair, a lot of what they’re talking about in the issue goes over my head.</p>
+<p>What I find so interesting though is that, despite this initial grim prognosis that TCO wouldn’t be implemented in Rust (from the original authors too, no doubt), people to this day still haven’t stopped trying to make TCO a thing in rustc.</p>
+<h2 id="subsequent-proposals-for-adding-tco-into-rustc">
+  Subsequent Proposals for Adding TCO into Rustc
+  <a class="heading-link" href="#subsequent-proposals-for-adding-tco-into-rustc">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>In May of 2014, <a href="https://github.com/rust-lang/rfcs/pull/81">this</a> PR was opened, citing that LLVM was now able to support TCO in response to the earlier mailing list thread. More specifically, this PR sought to enable on-demand TCO by introducing a new keyword <code>become</code>, which would prompt the compiler to perform TCO on the specified tail recursive function execution.</p>
+<p>Over the course of the PR’s lifetime, it was pointed out that rustc could, in certain situations, infer when TCO was appropriate and perform it <a href="https://github.com/rust-lang/rfcs/issues/271#issuecomment-271161622">3</a>. The proposed <code>become</code> keyword would thus be similar in spirit to the <code>unsafe</code> keyword, but specifically for TCO.</p>
+<p>A subsequent <a href="https://github.com/DemiMarie/rfcs/blob/become/0000-proper-tail-calls.md">RFC</a> was opened in February of 2017, very much in the same vein as the previous proposal. Interestingly, the author notes that some of the biggest hurdles to getting tail call optimizations (what are referred to as “proper tail calls”) merged were:</p>
+<ul>
+<li>Portability issues; LLVM at the time didn’t support proper tail calls when targeting certain architectures, notably MIPS and WebAssembly.</li>
+<li>The fact that proper tail calls in LLVM were actually likely to cause a performance penalty due to how they were implemented at the time.</li>
+<li>TCO makes debugging more difficult since it overwrites stack values.</li>
+</ul>
+<p>Indeed, the author of the RFC admits that Rust has gotten on perfectly fine thus far without TCO, and that it will certainly continue on just fine without it.</p>
+<p>Thus far, explicit user-controlled TCO hasn’t made it into rustc.</p>
+<h2 id="enabling-tco-via-a-library">
+  Enabling TCO via a Library
+  <a class="heading-link" href="#enabling-tco-via-a-library">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>However, many of the issues that bog down TCO RFCs and proposals can be sidestepped to an extent. Several homebrew solutions for adding explicit TCO to Rust exist.</p>
+<p>The general idea with these is to implement what is called a “trampoline”. This refers to the abstraction that actually takes a tail-recursive function and transforms it to use an iterative loop instead.</p>
+<blockquote>
+<p>How about we first implement this with a trampoline as a slow cross-platform fallback
+implementation, and then successively implement faster methods for each architecture/platform?
+This way the feature can be ready quite quickly, so people can use it for elegant programming. In a future version of rustc such code will magically become fast.</p>
+</blockquote>
+<ul>
+<li><a href="https://github.com/connyonny">@ConnyOnny</a>, <a href="https://github.com/rust-lang/rfcs/issues/271#issuecomment-269255176">4</a></li>
+</ul>
+<p>Bruno Corrêa Zimmermann’s <a href="https://crates.io/crates/tramp">tramp.rs</a> library is probably the most high-profile of these library solutions. Let’s take a peek under the hood and see how it works.</p>
+<h2 id="diving-into-tramprs">
+  Diving Into tramp.rs
+  <a class="heading-link" href="#diving-into-tramprs">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>The tramp.rs library exports two macros, <code>rec_call!</code> and <code>rec_ret!</code>, that facilitate the same behavior as what the proposed <code>become</code> keyword would do: it allows the programmer to prompt the Rust runtime to execute the specified tail-recursive function via an iterative loop, thereby decreasing the memory cost of the function to a constant.</p>
+<p>The <code>rec_call!</code> macro is what kicks this process off, and is most analogous to what the <code>become</code> keyword would do if it were introduced into rustc:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust">macro_rules<span style="color:#666">!</span><span style="color:#bbb"> </span>rec_call<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>(<span style="color:#007020">$call</span>:<span style="color:#0e84b5;font-weight:bold">expr</span>)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">return</span><span style="color:#bbb"> </span>BorrowRec::Call(Thunk::new(<span style="color:#007020;font-weight:bold">move</span><span style="color:#bbb"> </span><span style="color:#666">||</span><span style="color:#bbb"> </span><span style="color:#007020">$call</span>));<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>};<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p><code>rec_call!</code> makes use of two additional important constructs, <code>BorrowRec</code> and <code>Thunk</code>.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">enum</span> <span style="color:#0e84b5;font-weight:bold">BorrowRec</span><span style="color:#666">&lt;</span><span style="color:#4070a0">&#39;a</span>,<span style="color:#bbb"> </span>T<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>Ret(T),<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>Call(Thunk<span style="color:#666">&lt;</span><span style="color:#4070a0">&#39;a</span>,<span style="color:#bbb"> </span>BorrowRec<span style="color:#666">&lt;</span><span style="color:#4070a0">&#39;a</span>,<span style="color:#bbb"> </span>T<span style="color:#666">&gt;&gt;</span>),<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>The <code>BorrowRec</code> enum represents two possible states a tail-recursive function call can be in at any one time: either it hasn’t reached its base case yet, in which case we’re still in the <code>BorrowRec::Call</code> state, or it has reached a base case and has produced its final value(s), in which case we’ve arrived at the <code>BorrowRec::Ret</code> state.</p>
+
+<div class="notices note" >
+    <p>Modeling the state of recursive functions in this way, with a <code>Call</code> state representing the fact that the function is still recursing and a <code>Ret</code> state indicating that the function has arrived at a base case, reminds me a lot of how async Promises are modeled.</p>
+<p>Promises can be in one of three states, &ldquo;pending&rdquo;, meaning it&rsquo;s still waiting on an asynchronous operation, &ldquo;resolved&rdquo;, meaning the asynchronous operation occurred successfully, and &ldquo;rejected&rdquo;, meaning the asynchronous operation did not occur successfully.</p>
+
+</div>
+<p>The <code>Call</code> variant of the <code>BorrowRec</code> enum contains the following definition for a <code>Thunk</code>:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">Thunk</span><span style="color:#666">&lt;</span><span style="color:#4070a0">&#39;a</span>,<span style="color:#bbb"> </span>T<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>fun: <span style="color:#007020">Box</span><span style="color:#666">&lt;</span>FnThunk<span style="color:#666">&lt;</span>Out<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>T<span style="color:#666">&gt;</span><span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span><span style="color:#4070a0">&#39;a</span><span style="color:#666">&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>The <code>Thunk</code> struct holds on to a reference to the tail-recursive function, which is represented by the <code>FnThunk</code> trait.</p>
+<p>Lastly, this is all tied together with the <code>tramp</code> function:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">tramp</span><span style="color:#666">&lt;</span><span style="color:#4070a0">&#39;a</span>,<span style="color:#bbb"> </span>T<span style="color:#666">&gt;</span>(<span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>res: <span style="color:#0e84b5;font-weight:bold">BorrowRec</span><span style="color:#666">&lt;</span><span style="color:#4070a0">&#39;a</span>,<span style="color:#bbb"> </span>T<span style="color:#666">&gt;</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#0e84b5;font-weight:bold">T</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">loop</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">match</span><span style="color:#bbb"> </span>res<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">            </span>BorrowRec::Ret(x)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">break</span><span style="color:#bbb"> </span>x,<span style="color:#bbb">
+</span><span style="color:#bbb">            </span>BorrowRec::Call(thunk)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>res<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>thunk.compute(),<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>This receives as input a tail-recursive function contained in a <code>BorrowRec</code> instance, and continually calls the function so long as the <code>BorrowRec</code> remains in the <code>Call</code> state. Otherwise, when the recursive function arrives at the <code>Ret</code> state with its final computed value, that final value is returned via the <code>rec_ret!</code> macro.</p>
+<h2 id="are-we-tco-yet">
+  Are We TCO Yet?
+  <a class="heading-link" href="#are-we-tco-yet">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>So that’s it right? tramp.rs is the hero we all needed to enable on-demand TCO in our Rust programs, right?</p>
+<p>I’m afraid not.</p>
+<p>While I really like how the idea of trampolining as a way to incrementally introduce TCO is presented in this implementation, <a href="https://gitlab.com/timthelion/trampoline-rs/commit/84f6c843658c6c3a5893effa031ce734b910171c">benchmarks</a> that <a href="https://github.com/timthelion">@timthelion</a> has graciously already run indicate that using tramp.rs leads to a slight regression in performance compared to manually converting the tail-recursive function to an iterative loop.</p>
+<p><img src="timthelion-comment.png" alt="timthelion&rsquo;s benchmarks"></p>
+<p>Part of what contributes to the slowdown of tramp.rs’s performance is likely, as <a href="https://github.com/jonhoo">@jonhoo</a> points out, the fact that each <code>rec_call!</code> call allocates memory on the heap due to it calling <code>Thunk::new</code>:</p>
+<p><img src="jonhoo-comment.png" alt="Jon Gjenset weighing in"></p>
+<p>So it turns that tramp.rs’s trampolining implementation doesn’t even actually achieve the constant memory usage that TCO promises!</p>
+<p>Ah well. Perhaps on-demand TCO will be added to rustc in the future. Or maybe not; it’s gotten by just fine without it thus far.</p>
+<h2 id="links-and-citations">
+  Links and Citations
+  <a class="heading-link" href="#links-and-citations">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>1: <a href="https://stackoverflow.com/questions/42788139/es6-tail-recursion-optimisation-stack-overflow">https://stackoverflow.com/questions/42788139/es6-tail-recursion-optimisation-stack-overflow</a></p>
+<p>2: <a href="http://neopythonic.blogspot.com/2009/04/final-words-on-tail-calls.html">http://neopythonic.blogspot.com/2009/04/final-words-on-tail-calls.html</a></p>
+<p>3: <a href="https://github.com/rust-lang/rfcs/issues/271#issuecomment-271161622">https://github.com/rust-lang/rfcs/issues/271#issuecomment-271161622</a></p>
+<p>4: <a href="https://github.com/rust-lang/rfcs/issues/271#issuecomment-269255176">https://github.com/rust-lang/rfcs/issues/271#issuecomment-269255176</a></p>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      
+  <footer class="footer">
+    <section class="container">
+      
+      
+        ©
+        
+        2021
+         Sean Chen 
+      
+      
+         · 
+        Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+      
+      
+    </section>
+  </footer>
+
+
+    </main>
+
+    
+      
+        
+        <script src="https://seanchen1991.github.io/js/dark-mode.min.0213e1773e6d1c5a644f847c67a6f8abac49a3776e2976f6008038af8c5b76a1.js"></script>
+      
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+  </body>
+
+</html>

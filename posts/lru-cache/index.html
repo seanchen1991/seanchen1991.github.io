@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Language" content="en">
+    
+
+    <meta name="author" content="Sean Chen">
+    <meta name="description" content="This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The [chapter][traits-chapter] in the official Rust book is as good a place as any 🙂
+ LRU caches are one of my favorite data structures to teach. One way of implementing an LRU cache (in Python, the language that I teach in) requires combining two separate data structures: a hash map in order to enable efficient access via hashing of keys, and a doubly-linked list in order to maintain the ordering of cache elements.">
+    <meta name="keywords" content="blog,personal,developer,teacher">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Implementing an LRU Cache in Rust"/>
+<meta name="twitter:description" content="This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The [chapter][traits-chapter] in the official Rust book is as good a place as any 🙂
+ LRU caches are one of my favorite data structures to teach. One way of implementing an LRU cache (in Python, the language that I teach in) requires combining two separate data structures: a hash map in order to enable efficient access via hashing of keys, and a doubly-linked list in order to maintain the ordering of cache elements."/>
+
+    <meta property="og:title" content="Implementing an LRU Cache in Rust" />
+<meta property="og:description" content="This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The [chapter][traits-chapter] in the official Rust book is as good a place as any 🙂
+ LRU caches are one of my favorite data structures to teach. One way of implementing an LRU cache (in Python, the language that I teach in) requires combining two separate data structures: a hash map in order to enable efficient access via hashing of keys, and a doubly-linked list in order to maintain the ordering of cache elements." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://seanchen1991.github.io/posts/lru-cache/" />
+<meta property="article:published_time" content="2021-01-23T01:00:00-06:00" />
+<meta property="article:modified_time" content="2021-01-23T01:00:00-06:00" />
+
+
+    <title>
+  Implementing an LRU Cache in Rust · Sean Chen&#39;s Blog
+</title>
+
+    
+      <link rel="canonical" href="https://seanchen1991.github.io/posts/lru-cache/">
+    
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://seanchen1991.github.io/fonts/forkawesome-webfont.woff2?v=1.1.7" as="font" type="font/woff2" crossorigin>
+
+    
+      
+      
+      <link rel="stylesheet" href="https://seanchen1991.github.io/css/coder.min.f48a4da9bd32cecaff90717ae85529411dd087c10fc0dfca9c9c329c7327e5e1.css" integrity="sha256-9IpNqb0yzsr/kHF66FUpQR3Qh8EPwN/KnJwynHMn5eE=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://seanchen1991.github.io/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://seanchen1991.github.io/images/favicon-16x16.png" sizes="16x16">
+
+    <link rel="apple-touch-icon" href="https://seanchen1991.github.io/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://seanchen1991.github.io/images/apple-touch-icon.png">
+
+    
+
+    <meta name="generator" content="Hugo 0.71.1" />
+  </head>
+
+  
+  
+  <body class="colorscheme-light"
+        onload=""
+  >
+    
+<div class="float-container">
+    <a id="dark-mode-toggle" class="colorscheme-toggle">
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+
+
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://seanchen1991.github.io/">
+      Sean Chen&#39;s Blog
+    </a>
+    
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://seanchen1991.github.io/posts/">Blog</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://seanchen1991.github.io/about/">About</a>
+            </li>
+          
+        
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">
+            <a class="title-link" href="https://seanchen1991.github.io/posts/lru-cache/">
+              Implementing an LRU Cache in Rust
+            </a>
+          </h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime='2021-01-23T01:00:00-06:00'>
+                January 23, 2021
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              21-minute read
+            </span>
+          </div>
+          
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <a href="https://seanchen1991.github.io/tags/rust/">Rust</a>
+      <span class="separator">•</span>
+    <a href="https://seanchen1991.github.io/tags/python/">Python</a>
+      <span class="separator">•</span>
+    <a href="https://seanchen1991.github.io/tags/teaching/">Teaching</a>
+      <span class="separator">•</span>
+    <a href="https://seanchen1991.github.io/tags/data-structures/">Data Structures</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        
+<div class="notices note" >
+    <p>This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The [chapter][traits-chapter] in the official Rust book is as good a place as any 🙂</p>
+
+</div>
+<p>LRU caches are one of my favorite data structures to teach. One way of implementing an LRU cache (in Python, the language that I teach in) requires combining two separate data structures: a hash map in order to enable efficient access via hashing of keys, and a doubly-linked list in order to maintain the ordering of cache elements.</p>
+<p>However, structuring an LRU cache implementation in the same way in Rust would likely make it really clunky and difficult, since <a href="https://rust-unofficial.github.io/too-many-lists/fourth.html">implementing doubly linked lists in Rust is hard</a>. We’ll need to come up with a different strategy when we get around to implementing it Rust. But first, let’s see the Python implementation.</p>
+
+<div class="notices note" >
+    <p>I’m aware that Python’s dictionary implementation orders key-value pairs by insertion order, so we could just take advantage of that feature in our LRU cache implementation as a way to keep track of the order of cache entries. However, this would obviate the learning exercise. We’ll be disregarding this feature for our Python implementation.</p>
+
+</div>
+<h1 id="coming-up-with-requirements-for-our-cache">
+  Coming up with Requirements for our Cache
+  <a class="heading-link" href="#coming-up-with-requirements-for-our-cache">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h1>
+<p>The job of a cache is to store data and/or objects such that subsequent accesses are performed more quickly than the initial access. By design, caches are meant to be kept small in order to speed up read operations. An important question then when designing a cache is “what gets kept and what gets evicted when the cache reaches capacity?”.</p>
+<p>An LRU (or Least Recently Used) cache employs a fairly straightforward strategy: the data that was accessed the longest time ago is what is evicted from the cache. In order to do this, our LRU cache needs to keep track of the order in which elements (which take the form of key-value pairs) it holds are inserted and fetched.</p>
+<p>Whenever an element is inserted into or fetched from the cache, that element becomes the newest element in the cache. Additionally, if the cache is already at max capacity when we insert a new element, then the eviction routine needs to be executed in order to remove the oldest cache element and make room for the new cache element.</p>
+<p>So our LRU cache will need an <code>insert</code> operation as well as a <code>fetch</code> operation. It will also need an <code>evict</code> operation, though we’ll opt to not expose this method as part of our cache’s public API.</p>
+<h1 id="our-python-implementation">
+  Our Python Implementation
+  <a class="heading-link" href="#our-python-implementation">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h1>
+<p>With a loose specification of the requirements of our LRU cache, we can define the constructor as such:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#007020;font-weight:bold">from</span> <span style="color:#0e84b5;font-weight:bold">doubly_linked_list</span> <span style="color:#007020;font-weight:bold">import</span> DoublyLinkedList
+
+<span style="color:#007020;font-weight:bold">class</span> <span style="color:#0e84b5;font-weight:bold">LRUCache</span>:
+  <span style="color:#007020;font-weight:bold">def</span> __init__(self, capacity<span style="color:#666">=</span><span style="color:#40a070">100</span>):
+	  <span style="color:#60a0b0;font-style:italic"># the max number of entries the cache can hold</span>
+	  self<span style="color:#666">.</span>capacity <span style="color:#666">=</span> capacity
+	  <span style="color:#60a0b0;font-style:italic"># the hash map for storing entries as key-value pairs </span>
+	  <span style="color:#60a0b0;font-style:italic"># it’s what allows us to efficiently fetch entries </span>
+	  self<span style="color:#666">.</span>storage <span style="color:#666">=</span> <span style="color:#007020">dict</span>()
+	  <span style="color:#60a0b0;font-style:italic"># a doubly linked list for keeping track of the order</span>
+    <span style="color:#60a0b0;font-style:italic"># of elements in our cache </span>
+    self<span style="color:#666">.</span>order <span style="color:#666">=</span> DoublyLinkedList()
+</code></pre></div>
+<div class="notices note" >
+    <p>We won’t be going over the design and implementation of the <code>DoublyLinkedList</code> that we’re using here, though its code is included in the GitHub repo should you wish to take a look.</p>
+
+</div>
+<p>Our cache’s constructor receives a single optional parameter specifying the maximum number of entries that the cache can hold, which is stored in the <code>self.capacity</code> variable. The <code>self.storage</code> dictionary associates keys with the contents of the cache that we actually care about. <code>self.order</code> stores a <code>DoublyLinkedList</code> whose sole job is to keep track of the order of entries in the cache: the newest entry in the list will always be at the head of the list, and the oldest entry will always be at the tail.</p>
+<p>Let’s first define our <code>insert</code> method. It takes a key-value pair, where the value is the actual cached content that we care about, and the key is some sort of key that allows us to access the cached content. If the key isn’t already contained in the cache, it needs to be added to the <code>self.storage</code> dictionary, and we’ll also add the key as a node at the head of the <code>self.order</code> linked list. However, if the key already exists in the cache, then we want to only overwrite its value instead of re-inserting the key into the cache with a new value.</p>
+<p>Additionally, if it turns out the cache is already at max capacity, we’ll need to evict the oldest entry in the cache:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">	<span style="color:#007020;font-weight:bold">def</span> <span style="color:#06287e">insert</span>(self, key, value):
+		<span style="color:#60a0b0;font-style:italic"># if the key is already in the cache, overwrite </span>
+		<span style="color:#60a0b0;font-style:italic"># its value </span>
+		<span style="color:#007020;font-weight:bold">if</span> key <span style="color:#007020;font-weight:bold">in</span> self<span style="color:#666">.</span>storage:
+			entry <span style="color:#666">=</span> self<span style="color:#666">.</span>storage[key]
+			entry<span style="color:#666">.</span>data <span style="color:#666">=</span> (key, value)
+			<span style="color:#60a0b0;font-style:italic"># touch this entry to move it to the head of </span>
+			<span style="color:#60a0b0;font-style:italic"># the linked list</span>
+			self<span style="color:#666">.</span>touch(entry)
+			
+		<span style="color:#60a0b0;font-style:italic"># check if our cache is at max capacity to see</span>
+		<span style="color:#60a0b0;font-style:italic"># if we need to evict the oldest entry </span>
+		<span style="color:#007020;font-weight:bold">if</span> <span style="color:#007020">len</span>(self<span style="color:#666">.</span>storage) <span style="color:#666">==</span> self<span style="color:#666">.</span>capacity:
+			self<span style="color:#666">.</span>evict()
+			
+		<span style="color:#60a0b0;font-style:italic"># add the key and value as a node at the </span>
+		<span style="color:#60a0b0;font-style:italic"># head of our doubly linked list </span>
+		self<span style="color:#666">.</span>order<span style="color:#666">.</span>add_to_head((key, value))
+		<span style="color:#60a0b0;font-style:italic"># add the linked list node as the value of </span>
+		<span style="color:#60a0b0;font-style:italic"># the key in our storage dictionary</span>
+		self<span style="color:#666">.</span>storage[key] <span style="color:#666">=</span> self<span style="color:#666">.</span>order<span style="color:#666">.</span>head
+</code></pre></div><p>Each linked list node is storing a tuple of the <code>key</code> and the <code>value</code>. Each key-value pair in <code>self.storage</code> consists of the <code>key</code> as its key and a linked list node as its value:</p>
+<p><img src="python-impl-layout.png" alt="Layout of the Python LRU implementation"></p>
+<p>Let’s implement the <code>touch</code> method, which is responsible for moving an entry in our cache to the most-recently-added spot in our cache. Our doubly linked list implementation has a method <code>move_to_front</code> that takes a node and does the work of moving it from wherever it is in the list to the head; we’ll use it here in our <code>touch</code> implementation:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">	<span style="color:#007020;font-weight:bold">def</span> <span style="color:#06287e">touch</span>(self, entry):
+		self<span style="color:#666">.</span>order<span style="color:#666">.</span>move_to_front(entry)
+</code></pre></div><p>The <code>evict</code> method is responsible for removing the oldest entry in the cache and is called only when we attempt to insert into the cache when it is already at max capacity. It needs to remove the node at the tail of the linked list, as well as make sure the key that referred to the oldest entry is also removed from <code>self.storage</code>:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">	<span style="color:#007020;font-weight:bold">def</span> <span style="color:#06287e">evict</span>(self):
+		<span style="color:#60a0b0;font-style:italic"># delete the key-value pair from the storage dict </span>
+		<span style="color:#60a0b0;font-style:italic"># we can get the oldest entry’s key by accessing </span>
+		<span style="color:#60a0b0;font-style:italic"># it from the tail of the linked list </span>
+		key_to_delete <span style="color:#666">=</span> self<span style="color:#666">.</span>order<span style="color:#666">.</span>tail<span style="color:#666">.</span>data[<span style="color:#40a070">0</span>]
+		<span style="color:#007020;font-weight:bold">del</span> self<span style="color:#666">.</span>storage[key_to_delete]
+		
+		<span style="color:#60a0b0;font-style:italic"># remove the tail entry from our linked list </span>
+		self<span style="color:#666">.</span>order<span style="color:#666">.</span>remove_from_tail()
+</code></pre></div><p>Now we need to implement the <code>fetch</code> method which accepts a key to an entry in the cache, checks whether the key exists, then returns the value associated with the key. This method also moves the entry to the head of the linked list as this entry is now the most-recently-used entry in the cache.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">	<span style="color:#007020;font-weight:bold">def</span> <span style="color:#06287e">fetch</span>(self, key):
+		<span style="color:#007020;font-weight:bold">if</span> key <span style="color:#007020;font-weight:bold">not</span> <span style="color:#007020;font-weight:bold">in</span> self<span style="color:#666">.</span>storage:
+			<span style="color:#007020;font-weight:bold">return</span> 
+		
+		entry <span style="color:#666">=</span> self<span style="color:#666">.</span>storage[key]
+		self<span style="color:#666">.</span>touch(entry)
+		<span style="color:#007020;font-weight:bold">return</span> entry<span style="color:#666">.</span>data[<span style="color:#40a070">1</span>]
+</code></pre></div><p>The full code for the Python implementation, as well as a suite of tests, can be found <a href="https://github.com/seanchen1991/python-lru/blob/main/src/lru_cache.py">here</a>.</p>
+<h1 id="transitioning-to-a-rust-implementation">
+  Transitioning to a Rust Implementation
+  <a class="heading-link" href="#transitioning-to-a-rust-implementation">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h1>
+<p>Our Python implementation liberally allocates objects in memory, most notably the two distinct data structures, a dictionary and a doubly linked list (which itself allocates lots of linked list nodes), with linked list nodes referring to one another, along with the dictionary referring to these nodes as well. This is an example of what Jim Blandy and Jason Orendorff call a “sea of objects” in their book  <em>Programming Rust</em>:</p>
+<p><img src="sea-of-objects.png" alt="Taking arms against a sea of objects"></p>
+<p>Automatic memory management makes this kind of memory architecture tenable: cyclical references are handled by the garbage collector. The tradeoff here is that programmers are able to develop working software without having to do as much up-front planning, at the cost of taking a performance hit due to the garbage collection process.</p>
+<p>When it comes to implementing this same data structure in Rust, opting to go with the same high-level design of using a doubly linked list to keep track of the order of cache entries and then storing those linked list nodes as values in a dictionary for efficient access will lead to very messy and clunky code in the best case, and unsafe code in the worst case. Implementing a doubly linked list in Rust, at least in the “traditional” way, is, as we mentioned earlier, not straightforward.</p>
+<p>So we’ll need to go back to the drawing board and come up with a different architecture. Of the two data structures we used in our Python implementation, the doubly linked list is certainly the more vital of the two: it maintains the order of cache entries, is cheap to insert into and remove from, and provides us direct access to the most-recently- and least-recently-used entries in the cache so long as we maintain the invariant that these entries live at the ends of the linked list.</p>
+<p>But wait, didn’t we just mention that doubly linked lists are a pain to implement in Rust?</p>
+<p>Well, I said that they’re a pain to implement in Rust in the “traditional” way, using nodes and references between those nodes. The reason why is due to the ownership system that dictates that every heap-allocated memory object can only have one owner at any point in time. Doubly linked lists buck this rule since each node, by design, is referred to by two nodes at once. Thus, implementing a node-based doubly linked list either requires liberal use of <code>Rc</code>s (which impose runtime checks) or unsafety.</p>
+<p>But wait! There’s actually a third route we could take that circumvents these issues. We’ll implement our doubly linked list using an array 🙂</p>
+<p>Each “node” in our array-backed doubly linked list, instead of referencing other node objects directly, will instead refer to the array indices where the node’s previous and next nodes reside in the array. This is certainly a more abstract way to implement a doubly linked list, though it gets the job done and has some important benefits for our use case, most notably that introducing an extra level of indirection by having each linked list node reference the array index of another linked list node completely circumvents the multiple owners issue that comes with the territory of doubly linked lists.</p>
+<p><img src="array-backed-dll.png" alt="An array-backed doubly linked list"></p>
+<p>Now, since all of our cache entries are being stored in an array, it would be straightforward to layer on a <code>HashMap</code> as part of our implementation where we store keys that are associated with a particular cache entry’s index in the array.</p>
+<p>However, instead of opting for this design, which would map relatively closely with the design of our Python implementation, we’re going to ditch the inclusion of a <code>HashMap</code> and actually just use our array-backed doubly linked list for our Rust implementation. This design decision means that we’re going to lose the ability to access arbitrary cache entries in constant time, but on the plus side, our cache will have a smaller memory footprint since we aren’t using another data structure.</p>
+<h2 id="implementing-the-rust-version-of-our-cache">
+  Implementing the Rust Version of our Cache
+  <a class="heading-link" href="#implementing-the-rust-version-of-our-cache">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>Let’s start off by defining an <code>Entry</code> type inside the <code>src/lib.rs</code> file of a new Rust project. This type will represent every entry in our cache and wrap some arbitrary piece of data that we want stored in the cache. Note that this type also doubles as our linked list node type as it refers to the previous and next entries in the cache.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">Entry</span><span style="color:#666">&lt;</span>T<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// The value stored in this entry
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span>val: <span style="color:#0e84b5;font-weight:bold">T</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Index of the previous entry in the cache
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span>prev: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Index of the next entry in the cache
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span>next: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span></code></pre></div><p>Next, our <code>LRUCache</code> type, which is responsible for storing an array of <code>Entry</code>s, as well as <code>head</code> and <code>tail</code> indices where the most-recently-used and least-recently-used <code>Entry</code>s are stored, respectively. The array will have a fixed size that can be specified when the <code>LRUCache</code> is initialized. Rust’s vanilla <code>array</code> <a href="https://docs.rust-lang.org/std/primitive.array.html">type</a> doesn’t actually satisfy this requirement ([yet][const-generics]), so we’ll need to import a crate that provides us with this capability, namely the <code>ArrayVec</code> <a href="https://docs.rs/arrayvec/0.5.2/arrayvec/">crate</a>.</p>
+<h3 id="bringing-in-arrayvec-as-a-dependency">
+  Bringing in <code>ArrayVec</code> as a Dependency
+  <a class="heading-link" href="#bringing-in-arrayvec-as-a-dependency">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h3>
+<p>First, add it as a dependency in your project’s <code>Cargo.toml</code> file:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">[dependencies]
+arrayvec = “0.5.2”
+</code></pre></div><p>Then in <code>src/lib.rs</code>:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>arrayvec::ArrayVec;<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">LRUCache</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">  </span><span style="color:#4070a0;font-style:italic">/// Our `ArrayVec` will be storing `Entry`s 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">  </span>entries: <span style="color:#0e84b5;font-weight:bold">ArrayVec</span><span style="color:#666">&lt;</span>Entry<span style="color:#666">&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">  </span><span style="color:#4070a0;font-style:italic">/// Index of the first entry in the cache
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">  </span>head: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">  </span><span style="color:#4070a0;font-style:italic">/// Index of the last entry in the cache
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">  </span>tail: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">  </span><span style="color:#4070a0;font-style:italic">/// The number of entries in the cache
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">  </span>length: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span></code></pre></div><p>If you try compiling what we have so far with <code>cargo build</code>, you should get an error like this:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">error[E0107]: wrong number of type arguments: expected 1, found 0
+  --&gt; src/main.rs:11:23
+   |
+11 |     entries: ArrayVec&lt;Entry&gt;,
+   |                       ^^^^^ expected 1 type argument
+
+error: aborting due to previous error
+</code></pre></div><p>To figure out what’s wrong here, we can look at ArrayVec’s <a href="https://docs.rs/arrayvec/0.5.2/arrayvec/struct.ArrayVec.html">documentation</a>. One of the code snippets that demonstrates how to initialize a new <code>ArrayVec</code> instance looks like this:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>arrayvec::ArrayVec;<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>array<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>ArrayVec::<span style="color:#666">&lt;</span>[_;<span style="color:#bbb"> </span><span style="color:#40a070">16</span>]<span style="color:#666">&gt;</span>::new();<span style="color:#bbb">
+</span></code></pre></div><p>The <code>&lt;[_; 16]&gt;</code> in this initialization is specifying up-front that the new <code>ArrayVec</code> will have a capacity of 16 and hold some unknown type (denoted by the <code>_</code>) that the compiler should infer later. This is the piece we’re missing in our code. But the whole point of bringing in and using <code>ArrayVec</code> was so that we could generalize over the capacity. How do we do that?</p>
+<p>If you search around <code>ArrayVec</code>’s docs, you might come across the <code>Array</code> <a href="https://docs.rs/arrayvec/0.5.2/arrayvec/trait.Array.html">trait</a>. This is what will allow us to generalize over the capacity of a new <code>ArrayVec</code> instance. When we go to initialize a new <code>LRUCache</code> instance, we can do so with something like this:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#60a0b0;font-style:italic">// An `LRUCache` that holds at most 4 `Entry&lt;i32&gt;`s
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>cache<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>LRUCache<span style="color:#666">&lt;</span>[Entry<span style="color:#666">&lt;</span><span style="color:#902000">i32</span><span style="color:#666">&gt;</span>;<span style="color:#bbb"> </span><span style="color:#40a070">4</span>]<span style="color:#666">&gt;</span>;<span style="color:#bbb">
+</span></code></pre></div><p>You can think of the <code>Array</code> trait as a kind of placeholder that ensures that when it’s time to initialize an instance of our <code>LRUCache</code>, that the user specifies the type the cache will be holding and its capacity.</p>
+<p>We’ll change our code to use this trait:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>arrayvec::{Array,<span style="color:#bbb"> </span>ArrayVec};<span style="color:#bbb">  </span><span style="color:#60a0b0;font-style:italic">// new import here
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#60a0b0;font-style:italic">// we’re saying here that any type our cache stores 
+</span><span style="color:#60a0b0;font-style:italic">// must implement the `Array` trait
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">LRUCache</span><span style="color:#666">&lt;</span>A: <span style="color:#0e84b5;font-weight:bold">Array</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>entries: <span style="color:#0e84b5;font-weight:bold">ArrayVec</span><span style="color:#666">&lt;</span>A<span style="color:#666">&gt;</span>,<span style="color:#bbb">  </span><span style="color:#60a0b0;font-style:italic">// add the type parameter here 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">	</span>head: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>tail: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>length: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span></code></pre></div><p>With these changes in place, our code should compile successfully!</p>
+<h3 id="implementing-methods-for-our-cache">
+  Implementing Methods for our Cache
+  <a class="heading-link" href="#implementing-methods-for-our-cache">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h3>
+<p>We’ll start off with implementing a way to initialize a new <code>LRUCache</code> instance. The way we’ll opt to do this is by implementing the <code>Default</code> trait for our <code>LRUCache</code>. Normally, <code>Default</code> is implemented when you want to provide a method to initialize a type with a default set of field values or configuration. Here though, we’re going to have users of our cache always initialize an <code>LRUCache</code> instance by using the same syntax that <code>ArrayVec</code> uses. So you can think of it as we’re providing one default way to initialize an <code>LRUCache</code> instance.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#60a0b0;font-style:italic">// the ‘default’ way to initialize an LRUCache instance 
+</span><span style="color:#60a0b0;font-style:italic">// is by using specifying a type that implements the 
+</span><span style="color:#60a0b0;font-style:italic">// `Array` trait, namely `&lt;[type; capacity]&gt;`
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#007020;font-weight:bold">impl</span><span style="color:#666">&lt;</span>A: <span style="color:#0e84b5;font-weight:bold">Array</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span><span style="color:#007020">Default</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>LRUCache<span style="color:#666">&lt;</span>A<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">default</span>()<span style="color:#bbb"> </span>-&gt; <span style="color:#0e84b5;font-weight:bold">Self</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>cache<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>LRUCache<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>entries: <span style="color:#0e84b5;font-weight:bold">ArrayVec</span>::new(),<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>head: <span style="color:#40a070">0</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>tail: <span style="color:#40a070">0</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>length: <span style="color:#40a070">0</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>};<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// check to make sure that the capacity provided by
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// the user is valid 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span>assert<span style="color:#666">!</span>(<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>cache.entries.capacity()<span style="color:#bbb"> </span><span style="color:#666">&lt;</span><span style="color:#bbb"> </span><span style="color:#902000">usize</span>::max_value(),<span style="color:#bbb">
+</span><span style="color:#bbb">			</span><span style="">“</span>Capacity<span style="color:#bbb"> </span>overflow<span style="">”</span><span style="color:#bbb">
+</span><span style="color:#bbb">		</span>);<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span>cache<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><h3 id="implementing-itermut">
+  Implementing <code>IterMut</code>
+  <a class="heading-link" href="#implementing-itermut">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h3>
+<p>Since we’ve decided that we aren’t going to use a <code>HashMap</code> in our implementation, we don’t have the capability to directly access any cache entries besides the head and tail entries. We’ll have to iterate through our list of entries to find a particular value to fetch from our cache. On that note, it behooves us to implement the <code>Iterator</code> trait for our cache.</p>
+<p>We could opt to implement both mutable and immutable iteration, but, thinking about the use case of our cache, it won’t be uncommon for users to want to mutate cache entries. So we’ll just take the lazy route and only implement an iterator that hands out mutable references to cache entries.</p>
+<p>The first thing we need to do is define a type that keeps track of the state of the iterator. Most importantly, the position of where the iterator is at any point in time:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#60a0b0;font-style:italic">// keeps track of where we currently are over 
+</span><span style="color:#60a0b0;font-style:italic">// the course of iteration 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">IterMut</span><span style="color:#666">&lt;</span><span style="">‘</span>a,<span style="color:#bbb"> </span>A: <span style="">‘</span>a<span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span>Array<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>cache: <span style="color:#007020">&amp;</span><span style="">’</span>a<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>LRUCache<span style="color:#666">&lt;</span>A<span style="color:#666">&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>pos: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>done: <span style="color:#902000">bool</span>,<span style="color:#bbb">
+</span></code></pre></div><p>Our <code>IterMut</code> struct needs a mutable reference to our cache itself so that mutable references can be handed out from it. This mutable reference to the cache needs to be valid for at least as long as the <code>LRUCache</code> itself is valid, which is what the <code>‘a</code> lifetime is specifying.</p>
+<p>Starting off the <code>Iterator</code> implementation for our <code>IterMut</code> type, we continue to use the <code>’a</code> lifetime to specify that <code>T</code> (which the type that is being stored in our <code>Entry</code>s) and the underlying <code>Array</code> type that our <code>LRUCache</code> wraps both live at least as long as our <code>IterMut</code> type.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">impl</span><span style="color:#666">&lt;</span><span style="">‘</span>a,<span style="color:#bbb"> </span>T,<span style="color:#bbb"> </span>A<span style="color:#666">&gt;</span><span style="color:#bbb"> </span><span style="color:#007020">Iterator</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>IterMut<span style="color:#666">&lt;</span><span style="">‘</span>a,<span style="color:#bbb"> </span>A<span style="color:#666">&gt;</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">where</span><span style="color:#bbb">
+</span><span style="color:#bbb">	</span>T: <span style="">‘</span>a,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>A: <span style="">‘</span>a<span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span>Array<span style="color:#666">&lt;</span>Item<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>Entry<span style="color:#666">&lt;</span>T<span style="color:#666">&gt;&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb"></span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">type</span> <span style="color:#0e84b5;font-weight:bold">Item</span><span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>(<span style="color:#902000">usize</span>,<span style="color:#bbb"> </span><span style="color:#666">&amp;</span><span style="">’</span>a<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>T);<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>The <code>type Item = (usize, &amp;’a mut T);</code> line indicates that each iteration yields a tuple with the position of the yielded entry, and a mutable reference to the underlying type that the entry was wrapping.</p>
+<p>To complete our <code>IterMut</code> implementation, the only method we need to implement is a <code>next</code> method that either returns an <code>Item</code> or <code>None</code> if there are no more items to be yielded from the iteration:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">next</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">Option</span><span style="color:#666">&lt;</span>Self::Item<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// check if we’ve iterated through all entries 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>self.done<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span><span style="color:#007020;font-weight:bold">return</span><span style="color:#bbb"> </span><span style="color:#007020">None</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// get the current entry and index
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>entry<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.cache.entries[self.pos];<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>index<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.pos;<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// we’re done iterating once we reach the tail entry
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>self.pos<span style="color:#bbb"> </span><span style="color:#666">==</span><span style="color:#bbb"> </span>self.cache.tail<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.done<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">true</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// increment our position
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span>self.pos<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>entry.next;<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#007020">Some</span>((index,<span style="color:#bbb"> </span><span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>entry.val))<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span></code></pre></div><p>However, if you try to compile this code, you’ll get the following errors:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">error[E0508]: cannot move out of type `[Entry&lt;T&gt;]`, a non-copy slice
+   --&gt; src/lib.rs:258:21
+    |
+258 |         let entry = self.cache.entries[self.pos];
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |                     |
+    |                     cannot move out of here
+    |                     move occurs because value has type `Entry&lt;T&gt;`, which does not implement the `Copy` trait
+    |                     help: consider borrowing here: `&amp;self.cache.entries[self.pos]`
+
+error[E0515]: cannot return value referencing local data `entry.val`
+   --&gt; src/lib.rs:268:9
+    |
+268 |         Some((index, &amp;mut entry.val))
+    |         ^^^^^^^^^^^^^--------------^^
+    |         |            |
+    |         |            `entry.val` is borrowed here
+    |         returns a value referencing data owned by the current function
+
+error[E0596]: cannot borrow `entry.val` as mutable, as `entry` is not declared as mutable
+   --&gt; src/lib.rs:268:22
+    |
+258 |         let entry = self.cache.entries[self.pos];
+    |             ----- help: consider changing this to be mutable: `mut entry`
+...
+268 |         Some((index, &amp;mut entry.val))
+    |                      ^^^^^^^^^^^^^^ cannot borrow as mutable
+
+error: aborting due to 3 previous errors
+
+</code></pre></div><p>Here, we’re getting a compiler error because our code is saying that our <code>IterMut</code> type is taking ownership of the cache entry, which would mean that the entry is no longer owned by the cache itself! The effect of this, if the compiler allowed us to follow through with it, is that iterating through all of the cache’s entries would move all of those entries out of the cache, leaving the cache with no entries after a single iteration pass! That’s&hellip; certainly not what we want.</p>
+<p>Let’s try changing the line this to take a mutable reference to the current entry instead, which is what our <code>IterMut</code> type is looking to do anyway:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>entry<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self.cache.entries[self.pos];<span style="color:#bbb">
+</span></code></pre></div><p>This change yields a different error:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">error[E0495]: cannot infer an appropriate lifetime for lifetime parameter in function call due to conflicting requirements
+   --&gt; src/lib.rs:258:26
+    |
+258 |         let entry = &amp;mut self.cache.entries[self.pos];
+    |                          ^^^^^^^^^^^^^^^^^^
+    |
+</code></pre></div><p>The compiler cannot adequately prove that these borrows to each cache entry will not live longer than the cache itself. The caller of the <code>iter_mut</code> method is free to do whatever they wish with the mutable references that are handed out.</p>
+<p>Moreover, the compiler also cannot prove that subsequent <code>next</code> calls won’t see us handing out a second mutable reference to an entry that already has a mutable reference referring to it. However, this is a consequence of the compiler not being smart enough to figure this out on its own. We, the programmer, know that subsequent <code>next</code> calls will advance the iterator forward to the next entry, so there will always exist at most one mutable reference to each cache entry at a time.</p>
+<p>In order to resolve this, we’re going to tell the compiler to trust us and opt for the backdoor option of dipping into some unsafe code here. We’ll take a raw pointer to each cache entry, which is essentially us telling the compiler that whatever this raw pointer refers to will not cause undefined behavior, because we know that it won’t, so long as we use <code>IterMut</code> in the intended way.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>entry<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">unsafe</span><span style="color:#bbb"> </span>{<span style="color:#bbb"> </span><span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span><span style="color:#666">*</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self.cache.entries[self.pos]<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span><span style="color:#666">*</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>Entry<span style="color:#666">&lt;</span>T<span style="color:#666">&gt;</span>)<span style="color:#bbb"> </span>};<span style="color:#bbb">
+</span></code></pre></div><p>If this makes you uneasy (and honestly, it probably should at least a little bit), well, you can at least take some solace in that fact that this isn’t production code that has any possibility of causing actual problems of consequence down the line 🙂</p>
+<p>But with that change, our code should compile without issue!</p>
+<h3 id="implementing-actual-cache-functionality">
+  Implementing Actual Cache Functionality
+  <a class="heading-link" href="#implementing-actual-cache-functionality">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h3>
+<p>We’ll start off by getting the easy methods out of the way:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#60a0b0;font-style:italic">// we need to bring the types that our `LRUCache` is 
+</span><span style="color:#60a0b0;font-style:italic">// parameterized over into our `impl` block
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#007020;font-weight:bold">impl</span><span style="color:#666">&lt;</span>T,<span style="color:#bbb"> </span>A<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>LRUCache<span style="color:#666">&lt;</span>A<span style="color:#666">&gt;</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">where</span><span style="color:#bbb">
+</span><span style="color:#bbb">	</span>A: <span style="color:#0e84b5;font-weight:bold">Array</span><span style="color:#666">&lt;</span>Item<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>Entry<span style="color:#666">&lt;</span>T<span style="color:#666">&gt;&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb"></span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Returns the number of entries in the cache
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">len</span>(<span style="color:#666">&amp;</span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#902000">usize</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.length<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">	
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Indicates whether the cache is empty or not 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">is_empty</span>(<span style="color:#666">&amp;</span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#902000">bool</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.length<span style="color:#bbb"> </span><span style="color:#666">==</span><span style="color:#bbb"> </span><span style="color:#40a070">0</span><span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Returns an instance of our `IterMut` type 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// We’ll keep this function private to minimize
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// the chance of mutable references to cache 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// entries being used incorrectly 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">iter_mut</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#0e84b5;font-weight:bold">IterMut</span><span style="color:#666">&lt;</span>A<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>IterMut<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>pos: <span style="color:#0e84b5;font-weight:bold">self</span>.head,<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>done: <span style="color:#0e84b5;font-weight:bold">self</span>.is_empty(),<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>cache: <span style="color:#0e84b5;font-weight:bold">self</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Clears the cache of all entries 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">clear</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.entries.clear();<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.head<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#40a070">0</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.tail<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#40a070">0</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.length<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#40a070">0</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>It will be convenient to add some methods for manipulating elements in our linked list, such as being able to add an entry to the head of the list or to the tail of the list. Let’s add those:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Returns a reference to the element stored at 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// the head of the list 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">front</span>(<span style="color:#666">&amp;</span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">Option</span><span style="color:#007020">&amp;</span><span style="color:#0e84b5;font-weight:bold">T</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// fetch the head entry and return a 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// reference to the inner value 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span>self.entries.get(self.head).map(<span style="color:#666">|</span>e<span style="color:#666">|</span><span style="color:#bbb"> </span><span style="color:#666">&amp;</span>e.val)<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Returns a mutable reference to the element stored 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#60a0b0;font-style:italic">// at the head of the list 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">front_mut</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">Option</span><span style="color:#666">&lt;&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>T<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// fetch the head entry mutably and return a 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// mutable reference to the inner value
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span>self.entries.get_mut(self.head).map(<span style="color:#666">|</span>e<span style="color:#666">|</span><span style="color:#bbb"> </span><span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>e.val)<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Takes an entry that has been added to the linked 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// list and moves the head to the entry’s position 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">push_front</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>index: <span style="color:#902000">usize</span>)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>self.entries.len()<span style="color:#bbb"> </span><span style="color:#666">==</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.tail<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>index;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">else</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.entries[index].next<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.head;<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.entries[self.head].prev<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>index;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span>self.head<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>index;<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Remove the last entry from the list and returns
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// the index of the removed entry. Note that this 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// only unlinks the entry from the list, it doesn’t
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// remove it from the array.
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">pop_back</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#902000">usize</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>old_tail<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.tail;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>new_tail<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.entries[old_tail].prev;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.tail<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>new_tail;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>old_tail<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span></code></pre></div><p>We’ll add one more method, <code>remove</code>, that takes as input an index into our array-backed linked list and “removes” the entry at that index. Note that this method actually only unlinks the entry from the linked list without actually removing it from the array. This is to avoid the runtime overhead of having to shift subsequent array elements forward to fill in the empty slot.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">remove</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>index: <span style="color:#902000">usize</span>)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>assert<span style="color:#666">!</span>(self.length<span style="color:#bbb"> </span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span><span style="color:#40a070">0</span>);<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>prev<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.entries[index].prev;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>next<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.entries[index].next;<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>index<span style="color:#bbb"> </span><span style="color:#666">==</span><span style="color:#bbb"> </span>self.head<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.head<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>next;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">else</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.entries[prev].next<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>next;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>index<span style="color:#bbb"> </span><span style="color:#666">==</span><span style="color:#bbb"> </span>self.tail<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.tail<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>prev;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">else</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.entries[next].prev<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>prev;<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span>self.length<span style="color:#bbb"> </span><span style="color:#666">-=</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span></code></pre></div><h3 id="touching-our-entries">
+  Touching our Entries
+  <a class="heading-link" href="#touching-our-entries">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h3>
+<p>With those out of the way, we can now implement the functionality that makes up the main attraction. We’ll start with the <code>touch</code> method, which is responsible for finding an entry and moving it from its initial position in the cache to the head of the linked list.</p>
+<p>In our Python implementation, we could conveniently access any entry in the cache via its associated key in the dictionary. Here, we opted to forgo that convenience. We’ll have to iterate over each entry and determine if it’s the entry we’re looking to move; only then will we have the index of the entry and can actually move it.</p>
+<p>Let’s first define a helper method called <code>touch_index</code> that will receive an index to an entry in our cache and move it to the head of the linked list:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Touch a given entry at the given index, putting it 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// first in the list.
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">touch_index</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>index: <span style="color:#902000">usize</span>)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>index<span style="color:#bbb"> </span><span style="color:#666">!=</span><span style="color:#bbb"> </span>self.head<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.remove(index);<span style="color:#bbb">
+</span><span style="color:#bbb">			
+</span><span style="color:#bbb">			</span><span style="color:#60a0b0;font-style:italic">// need to increment `self.length` here since 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">			</span><span style="color:#60a0b0;font-style:italic">// `remove` decrements it 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">			</span>self.length<span style="color:#bbb"> </span><span style="color:#666">+=</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.push_front(index);<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span></code></pre></div><p>With that, we can now implement <code>touch</code>. We’ll specify that the predicate must implement the <code>FnMut</code> trait, which, according to the <a href="https://doc.rust-lang.org/std/ops/trait.FnMut.html">docs</a>, fits our use-case nicely:</p>
+<blockquote>
+<p>Use <code>FnMut</code> as a bound when you want to accept a parameter of function-like type and need to call it repeatedly, while allowing it to mutate state.</p>
+</blockquote>
+<p>We’re more concerned with being able to “call it [the predicate] repeatedly” rather than having it mutate state (which the predicate shouldn’t be doing).</p>
+<p>Our <code>touch</code> method iterates over the entries in our cache (using our <code>iter_mut</code> method) and finds the first entry whose value matches the predicate. We then pass the index associated with the found entry to our <code>touch_index</code> method, which handles moving the entry to the head of the list:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Touches the first entry in the cache that matches the
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// given predicate. Returns `true` on a hit and `false`
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// if no match is found.
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">touch</span><span style="color:#666">&lt;</span>F<span style="color:#666">&gt;</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>pred: <span style="color:#0e84b5;font-weight:bold">F</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#902000">bool</span>
+	<span style="color:#0e84b5;font-weight:bold">where</span><span style="color:#bbb">
+</span><span style="color:#bbb">		</span>F: <span style="color:#007020">FnMut</span>(<span style="color:#666">&amp;</span>T)<span style="color:#bbb"> </span>-&gt; <span style="color:#902000">bool</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">match</span><span style="color:#bbb"> </span>self.iter_mut().find(<span style="color:#666">|&amp;</span>(_,<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">ref</span><span style="color:#bbb"> </span>x)<span style="color:#666">|</span><span style="color:#bbb"> </span>pred(x))<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span><span style="color:#007020">Some</span>((i,<span style="color:#bbb"> </span>_))<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">				</span>self.touch_index(i);<span style="color:#bbb">
+</span><span style="color:#bbb">				</span><span style="color:#007020;font-weight:bold">true</span><span style="color:#bbb">
+</span><span style="color:#bbb">			</span>},<span style="color:#bbb">
+</span><span style="color:#bbb">			</span><span style="color:#007020">None</span><span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">false</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span></code></pre></div><p>We can implement a similar method, <code>lookup</code>, which will essentially do the same thing as what our <code>touch</code> method is doing, but instead of returning a boolean indicating whether an entry matching the input predicate was found or not, <code>lookup</code> instead returns the found entry’s value or <code>None</code>.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">lookup</span><span style="color:#666">&lt;</span>F,<span style="color:#bbb"> </span>R<span style="color:#666">&gt;</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>pred: <span style="color:#0e84b5;font-weight:bold">F</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">Option</span><span style="color:#666">&lt;</span>R<span style="color:#666">&gt;</span><span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">where</span><span style="color:#bbb">
+</span><span style="color:#bbb">		</span>F: <span style="color:#007020">FnMut</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>T)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">Option</span><span style="color:#666">&lt;</span>R<span style="color:#666">&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>result<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020">None</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// iterate through our entries, testing each 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// using the predicate
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>(i,<span style="color:#bbb"> </span>entry)<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">in</span><span style="color:#bbb"> </span>self.iter_mut()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020">Some</span>(r)<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>pred(entry)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">				</span>result<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020">Some</span>((i,<span style="color:#bbb"> </span>r));<span style="color:#bbb">
+</span><span style="color:#bbb">				</span><span style="color:#007020;font-weight:bold">break</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// once we’ve iterated through all entries, match 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// on the result to move it to the head of the list
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// if necessary
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">match</span><span style="color:#bbb"> </span>result<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span><span style="color:#007020">None</span><span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span><span style="color:#007020">None</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">			</span><span style="color:#007020">Some</span>((i,<span style="color:#bbb"> </span>r))<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">				</span>self.touch_index(i);<span style="color:#bbb">
+</span><span style="color:#bbb">				</span><span style="color:#007020">Some</span>(r)<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span></code></pre></div><h3 id="inserting-new-entries">
+  Inserting New Entries
+  <a class="heading-link" href="#inserting-new-entries">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h3>
+<p>We can now fetch existing entries from our cache, and those entries will be moved to the head of the list when they are fetched. Let’s add an <code>insert</code> method that will take some <code>val</code> of arbitrary type and add it to the head of the linked list:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">insert</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>val: <span style="color:#0e84b5;font-weight:bold">T</span>)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>entry<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>Entry<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>val,<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>prev: <span style="color:#40a070">0</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>next: <span style="color:#40a070">0</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>};<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// check if the cache is at full capacity 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>new_head<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>self.length<span style="color:#bbb"> </span><span style="color:#666">==</span><span style="color:#bbb"> </span>self.entries.capacity()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span><span style="color:#60a0b0;font-style:italic">// get the index of the oldest entry
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">			</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>last_index<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.pop_back();<span style="color:#bbb">
+</span><span style="color:#bbb">			</span><span style="color:#60a0b0;font-style:italic">// overwrite the oldest entry with the new entry
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">			</span>self.entries[last_index]<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>entry;<span style="color:#bbb">
+</span><span style="color:#bbb">			</span><span style="color:#60a0b0;font-style:italic">// return the index of the newly-overwritten entry
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">			</span>last_index<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">else</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.entries.push(entry);<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.length<span style="color:#bbb"> </span><span style="color:#666">+=</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>self.entries.len()<span style="color:#bbb"> </span><span style="color:#666">-</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span><span style="color:#bbb">
+</span><span style="color:#bbb">		</span>};<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span>self.push_front(new_head);<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span></code></pre></div><p>With that, our cache is feature-complete! You can find the full code <a href="https://github.com/seanchen1991/rust-data-structures/blob/master/lru/src/lib.rs">here</a>, complete with tests as well as some additional miscellaneous trait implementations.</p>
+<h1 id="in-summary">
+  In Summary
+  <a class="heading-link" href="#in-summary">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h1>
+<p>I had a lot of fun transposing a Python data structure implementation that I’m quite familiar with into a Rust version. Clearly, the fact that Python and Rust belong in such different paradigms contributes significantly to how these implementations turned out.</p>
+<p>However, we did inject some of our own design decisions into the Rust implementation as well (opting to forgo including a HashMap as part of the design), and that too contributed in part to the data structure’s design being so different between the two languages.</p>
+<p>I hope you had fun learning about LRU caches as well! 🙂</p>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      
+  <footer class="footer">
+    <section class="container">
+      
+      
+        ©
+        
+        2021
+         Sean Chen 
+      
+      
+         · 
+        Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+      
+      
+    </section>
+  </footer>
+
+
+    </main>
+
+    
+      
+        
+        <script src="https://seanchen1991.github.io/js/dark-mode.min.0213e1773e6d1c5a644f847c67a6f8abac49a3776e2976f6008038af8c5b76a1.js"></script>
+      
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+  </body>
+
+</html>

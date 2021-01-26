@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Open Source on Sean Chen&#39;s Blog</title>
+    <link>https://seanchen1991.github.io/tags/open-source/</link>
+    <description>Recent content in Open Source on Sean Chen&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 18 Aug 2020 21:40:00 -0700</lastBuildDate>
+    
+	<atom:link href="https://seanchen1991.github.io/tags/open-source/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Why I&#39;m Switching from VSCode to OniVim 2</title>
+      <link>https://seanchen1991.github.io/posts/onivim2/</link>
+      <pubDate>Tue, 18 Aug 2020 21:40:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/onivim2/</guid>
+      <description>As someone interested in open source sustainability, I recently heard about a very interesting open source licensing scheme that a project called OniVim 2 uses. The central premise of the project itself is to combine the efficient modal editing functionality of Vim with a modern text editor UI.
+How OniVim’s Licensing Scheme Works    The OniVim 2 editor is currently under active development by Outrun Labs. Any updates pushed to the project by them go under a commercial license; this is the closed source half of the scheme.</description>
+    </item>
+    
+    <item>
+      <title>Some Learnings from Implementing a Normalizing Rust Representer</title>
+      <link>https://seanchen1991.github.io/posts/rust-representer/</link>
+      <pubDate>Mon, 13 Jul 2020 11:50:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/rust-representer/</guid>
+      <description>I’ve been helping out and contributing to exercism.io for the past few months. As an open source platform for learning programming languages that supports Rust, Exercism aligns very well with all the things I’m currently passionate about: open source, teaching, and Rust.
+One of the most challenging hurdles the Exercism platform faces is the fact that students who opt in to receive mentor feedback on their work have to wait for a live person to get around to reviewing their submission.</description>
+    </item>
+    
+    <item>
+      <title>The Story of Tail Call Optimizations in Rust</title>
+      <link>https://seanchen1991.github.io/posts/tco-story/</link>
+      <pubDate>Wed, 03 Jun 2020 20:00:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/tco-story/</guid>
+      <description>I think tail call optimizations are pretty neat, particularly how they work to solve a fundamental issue with how recursive function calls execute. Functional languages like Haskell and those of the Lisp family, as well as logic languages (of which Prolog is probably the most well-known exemplar) emphasize recursive ways of thinking about problems. These languages have much to gain performance-wise by taking advantage of tail call optimizations.
+I won&amp;rsquo;t be describing what tail calls are in this post.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Introspection on Sean Chen&#39;s Blog</title>
+    <link>https://seanchen1991.github.io/tags/introspection/</link>
+    <description>Recent content in Introspection on Sean Chen&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 27 May 2020 11:50:00 -0700</lastBuildDate>
+    
+	<atom:link href="https://seanchen1991.github.io/tags/introspection/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Takeaways from My Initial Exposure to Rust</title>
+      <link>https://seanchen1991.github.io/posts/takeaways-i/</link>
+      <pubDate>Wed, 27 May 2020 11:50:00 -0700</pubDate>
+      
+      <guid>https://seanchen1991.github.io/posts/takeaways-i/</guid>
+      <description>My journey into learning Rust and getting into its wonderful open source community has been, on the whole, pretty stop-and-go.
+First Encounter    I was introduced to Rust way back in 2014, probably around the time when it was around version 0.8 or so. I was a student in Hack Reactor’s sixteenth cohort, learning JavaScript, Angular, and Node.js in preparation for taking on a role as a web developer.</description>
+    </item>
+    
+  </channel>
+</rss>

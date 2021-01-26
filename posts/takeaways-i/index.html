@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Language" content="en">
+    
+
+    <meta name="author" content="Sean Chen">
+    <meta name="description" content="My journey into learning Rust and getting into its wonderful open source community has been, on the whole, pretty stop-and-go.
+First Encounter    I was introduced to Rust way back in 2014, probably around the time when it was around version 0.8 or so. I was a student in Hack Reactor’s sixteenth cohort, learning JavaScript, Angular, and Node.js in preparation for taking on a role as a web developer.">
+    <meta name="keywords" content="blog,personal,developer,teacher">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Takeaways from My Initial Exposure to Rust"/>
+<meta name="twitter:description" content="My journey into learning Rust and getting into its wonderful open source community has been, on the whole, pretty stop-and-go.
+First Encounter    I was introduced to Rust way back in 2014, probably around the time when it was around version 0.8 or so. I was a student in Hack Reactor’s sixteenth cohort, learning JavaScript, Angular, and Node.js in preparation for taking on a role as a web developer."/>
+
+    <meta property="og:title" content="Takeaways from My Initial Exposure to Rust" />
+<meta property="og:description" content="My journey into learning Rust and getting into its wonderful open source community has been, on the whole, pretty stop-and-go.
+First Encounter    I was introduced to Rust way back in 2014, probably around the time when it was around version 0.8 or so. I was a student in Hack Reactor’s sixteenth cohort, learning JavaScript, Angular, and Node.js in preparation for taking on a role as a web developer." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://seanchen1991.github.io/posts/takeaways-i/" />
+<meta property="article:published_time" content="2020-05-27T11:50:00-07:00" />
+<meta property="article:modified_time" content="2020-05-27T11:50:00-07:00" />
+
+
+    <title>
+  Takeaways from My Initial Exposure to Rust · Sean Chen&#39;s Blog
+</title>
+
+    
+      <link rel="canonical" href="https://seanchen1991.github.io/posts/takeaways-i/">
+    
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://seanchen1991.github.io/fonts/forkawesome-webfont.woff2?v=1.1.7" as="font" type="font/woff2" crossorigin>
+
+    
+      
+      
+      <link rel="stylesheet" href="https://seanchen1991.github.io/css/coder.min.f48a4da9bd32cecaff90717ae85529411dd087c10fc0dfca9c9c329c7327e5e1.css" integrity="sha256-9IpNqb0yzsr/kHF66FUpQR3Qh8EPwN/KnJwynHMn5eE=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://seanchen1991.github.io/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://seanchen1991.github.io/images/favicon-16x16.png" sizes="16x16">
+
+    <link rel="apple-touch-icon" href="https://seanchen1991.github.io/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://seanchen1991.github.io/images/apple-touch-icon.png">
+
+    
+
+    <meta name="generator" content="Hugo 0.71.1" />
+  </head>
+
+  
+  
+  <body class="colorscheme-light"
+        onload=""
+  >
+    
+<div class="float-container">
+    <a id="dark-mode-toggle" class="colorscheme-toggle">
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+
+
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://seanchen1991.github.io/">
+      Sean Chen&#39;s Blog
+    </a>
+    
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://seanchen1991.github.io/posts/">Blog</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://seanchen1991.github.io/about/">About</a>
+            </li>
+          
+        
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">
+            <a class="title-link" href="https://seanchen1991.github.io/posts/takeaways-i/">
+              Takeaways from My Initial Exposure to Rust
+            </a>
+          </h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime='2020-05-27T11:50:00-07:00'>
+                May 27, 2020
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              4-minute read
+            </span>
+          </div>
+          
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <a href="https://seanchen1991.github.io/tags/rust/">Rust</a>
+      <span class="separator">•</span>
+    <a href="https://seanchen1991.github.io/tags/introspection/">Introspection</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        <p>My journey into learning Rust and getting into its wonderful open source community has been, on the whole, pretty stop-and-go.</p>
+<h2 id="first-encounter">
+  First Encounter
+  <a class="heading-link" href="#first-encounter">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>I was introduced to Rust way back in 2014, probably around the time when it was around version 0.8 or so. I was a student in Hack Reactor’s sixteenth cohort, learning JavaScript, Angular, and Node.js in preparation for taking on a role as a web developer. One of the TAs (or Hackers-In-Residence as they were called back then) who mentored my cohort was an early adopter of Rust and was very active in the open source community.</p>
+<p>He was (and still is?) a rather ardent advocate for Rust, citing its algebraic data types and its functional idioms. While my memories of that time are rather hazy, one thing I can say with absolute certainty is that I had zero idea of what any of it meant; I just nodded my head and pretended I understood.</p>
+<p>To his credit, this TA, perhaps noticing my wide-eyed curiosity, mentored me in writing a tiny Rust library that I published on my then-fledgling GitHub account. I had very little idea what any of the
+code he helped me write meant, though it was apparently a useful utility for him that he pulled in as a dependency on whatever crazy project he was working on at the time.</p>
+<h2 id="first-public-rust-code">
+  First Public Rust Code
+  <a class="heading-link" href="#first-public-rust-code">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>Here’s the code for that early project, in all of its glorious version 0.8 Rust goodness:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#4070a0;font-style:italic">//! A reader + writer stream backed by an in-memory buffer.
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::io;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::slice;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::cmp::min;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::io::IoResult;<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#4070a0;font-style:italic">/// `MemStream` is a reader + writer stream backed by an in-memory buffer
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">MemStream</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>buf: <span style="color:#007020">Vec</span><span style="color:#666">&lt;</span><span style="color:#902000">u8</span><span style="color:#666">&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>pos: <span style="color:#0e84b5;font-weight:bold">uint</span><span style="color:#bbb">    
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020">#[deriving(PartialOrd)]</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>MemStream<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#4070a0;font-style:italic">/// Creates a new `MemStream` which can be read and written to 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">new</span>()<span style="color:#bbb"> </span>-&gt; <span style="color:#0e84b5;font-weight:bold">MemStream</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>MemStream<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">            </span>buf: <span style="color:#0e84b5;font-weight:bold">vec</span><span style="color:#666">!</span>[],<span style="color:#bbb">
+</span><span style="color:#bbb">            </span>pos: <span style="color:#40a070">0</span><span style="color:#bbb"> 
+</span><span style="color:#bbb">        </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#4070a0;font-style:italic">/// Tests whether this stream has read all bytes in its ring buffer
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#4070a0;font-style:italic">/// If `true`, then this will no longer return bytes from `read`
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">eof</span>(<span style="color:#666">&amp;</span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#902000">bool</span> {<span style="color:#bbb"> </span>self.pos<span style="color:#bbb"> </span><span style="color:#666">&gt;=</span><span style="color:#bbb"> </span>self.buf.len()<span style="color:#bbb"> </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#4070a0;font-style:italic">/// Acquires an immutable reference to the underlying buffer of 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#4070a0;font-style:italic">/// this `MemStream`
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">as_slice</span><span style="color:#666">&lt;</span><span style="color:#4070a0">&#39;a</span><span style="color:#666">&gt;</span>(<span style="color:#666">&amp;</span><span style="color:#4070a0">&#39;a</span><span style="color:#bbb"> </span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">&amp;</span><span style="color:#4070a0">&#39;a</span><span style="color:#bbb"> </span>[<span style="color:#902000">u8</span>]<span style="color:#bbb"> </span>{<span style="color:#bbb"> </span>self.buf.as_slice()<span style="color:#bbb"> </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#4070a0;font-style:italic">/// Unwraps this `MemStream`, returning the underlying buffer
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">unwrap</span>(self)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">Vec</span><span style="color:#666">&lt;</span><span style="color:#902000">u8</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb"> </span>self.buf<span style="color:#bbb"> </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>Reader<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>MemStream<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">read</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>buf: <span style="color:#007020">&amp;</span><span style="color:#0e84b5;font-weight:bold">mut</span><span style="color:#bbb"> </span>[<span style="color:#902000">u8</span>])<span style="color:#bbb"> </span>-&gt; <span style="color:#0e84b5;font-weight:bold">IoResult</span><span style="color:#666">&lt;</span>uint<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>self.eof()<span style="color:#bbb"> </span>{<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">return</span><span style="color:#bbb"> </span><span style="color:#007020">Err</span>(io::standard_error(io::EndOfFile))<span style="color:#bbb"> </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>write_len<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>min(buf.len(),<span style="color:#bbb"> </span>self.buf.len()<span style="color:#bbb"> </span><span style="color:#666">-</span><span style="color:#bbb"> </span>self.pos);<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>{<span style="color:#bbb">   
+</span><span style="color:#bbb">            </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>input<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.buf.slice(self.pos,<span style="color:#bbb"> </span>self.pos<span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span>write_len);<span style="color:#bbb">
+</span><span style="color:#bbb">            </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>output<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>buf.slice_mut(<span style="color:#40a070">0</span>,<span style="color:#bbb"> </span>write_len);<span style="color:#bbb">
+</span><span style="color:#bbb">            </span>assert_eq<span style="color:#666">!</span>(input.len(),<span style="color:#bbb"> </span>output.len());<span style="color:#bbb">
+</span><span style="color:#bbb">            </span>slice::bytes::copy_memory(output,<span style="color:#bbb"> </span>input);<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>self.pos<span style="color:#bbb"> </span><span style="color:#666">+=</span><span style="color:#bbb"> </span>write_len;<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>assert<span style="color:#666">!</span>(self.pos<span style="color:#bbb"> </span><span style="color:#666">&lt;=</span><span style="color:#bbb"> </span>self.buf.len());<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">return</span><span style="color:#bbb"> </span><span style="color:#007020">Ok</span>(write_len);<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>Writer<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>MemStream<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">write</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>buf: <span style="color:#007020">&amp;</span>[<span style="color:#902000">u8</span>])<span style="color:#bbb"> </span>-&gt; <span style="color:#0e84b5;font-weight:bold">IoResult</span><span style="color:#666">&lt;</span>()<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>self.buf.push_all(buf);<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020">Ok</span>(())<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>It’s essentially a wrapper around a <code>Vec&lt;u8&gt;</code> that implements the <code>std::io::Reader</code> and <code>std::io::Writer</code> traits. <code>Reader</code>s are objects that can be read from, while <code>Writer</code>s are objects that can be written to. Files would be one prime example of something that requires these traits.</p>
+
+<div class="notices note" >
+    <p>Since those early pre-1.0 days, the trait names have been shorted from <code>Reader</code> and <code>Writer</code> to just <code>Read</code> and <code>Write</code>. Evidently, back in 0.8, the <code>Write</code> trait only required a <code>write</code> method to fulfill the trait. Nowadays, a <code>flush</code> method is also required as a way to completely drain all of the contents of the <code>Write</code>r.</p>
+
+</div>
+<p>Looking back at it now, it’s pretty cool to see that, even in its pre-1.0 days, Rust code really doesn’t look all that different from its current incarnation.</p>
+<p>Context is important here. I was not a seasoned or confident programmer at the time by any means. I’d been learning how to assemble simple web front ends and back-end APIs for the past few months. I most certainly couldn’t tell you the difference between the stack and the heap; apparently it just wasn’t necessary to know about in order to implement web applications. I was missing so much foundational knowledge and background that I had no inkling why Rust’s philosophy and its combination of features were (and are) game-changing for the wider programming community.</p>
+<p>To be honest, I think I just wanted some of this TA’s genius to rub off on me.</p>
+<h2 id="goodbye-for-now">
+  Goodbye For Now
+  <a class="heading-link" href="#goodbye-for-now">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>The months following Hack Reactor were a whirlwind of interviews and first-job jitters that consumed my waking days. I wouldn’t revisit Rust for almost two years, but the seed had been planted.</p>
+<p>Timing can be everything when it comes to learning. At the outset of my programming journey, I was certainly too immature to understand Rust. That being said, I also think that due to the Rust seed having been planted in my mind early on, my subsequent learnings were shaped by that early exposure.</p>
+<p>Indeed I would come to find out in the next few years that I really did not find web development all that interesting. I was drawn much more to concepts and ideas belonging to the realms of operating systems, systems programming, basically “lower level stuff”. To be fair, perhaps I was interested in these sorts of things just &lsquo;cause, and not actually because I was exposed to a low-level systems programming language early on. But the end result was that I naturally found my way back to Rust, and this time, much better equipped to really dig into the language and start learning it in earnest.</p>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      
+  <footer class="footer">
+    <section class="container">
+      
+      
+        ©
+        
+        2021
+         Sean Chen 
+      
+      
+         · 
+        Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+      
+      
+    </section>
+  </footer>
+
+
+    </main>
+
+    
+      
+        
+        <script src="https://seanchen1991.github.io/js/dark-mode.min.0213e1773e6d1c5a644f847c67a6f8abac49a3776e2976f6008038af8c5b76a1.js"></script>
+      
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+  </body>
+
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Language" content="en">
+    
+
+    <meta name="author" content="Sean Chen">
+    <meta name="description" content="I recently stumbled upon Allen Downey’s The Little Book of Semaphores, which is a short, sweet, and to-the-point textbook on the topic of synchronization.
+Naturally, reading through the book inspired me to implement these synchronization primitives and problems in Rust.
+I hope others find this exploration interesting, insightful, and/or helpful! 🙂
+ Implementing synchronization primitives in Rust in a safe fashion is a bit strange in a circular kind of way.">
+    <meta name="keywords" content="blog,personal,developer,teacher">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Implementing Synchronization Primitives in Rust: Semaphores"/>
+<meta name="twitter:description" content="I recently stumbled upon Allen Downey’s The Little Book of Semaphores, which is a short, sweet, and to-the-point textbook on the topic of synchronization.
+Naturally, reading through the book inspired me to implement these synchronization primitives and problems in Rust.
+I hope others find this exploration interesting, insightful, and/or helpful! 🙂
+ Implementing synchronization primitives in Rust in a safe fashion is a bit strange in a circular kind of way."/>
+
+    <meta property="og:title" content="Implementing Synchronization Primitives in Rust: Semaphores" />
+<meta property="og:description" content="I recently stumbled upon Allen Downey’s The Little Book of Semaphores, which is a short, sweet, and to-the-point textbook on the topic of synchronization.
+Naturally, reading through the book inspired me to implement these synchronization primitives and problems in Rust.
+I hope others find this exploration interesting, insightful, and/or helpful! 🙂
+ Implementing synchronization primitives in Rust in a safe fashion is a bit strange in a circular kind of way." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://seanchen1991.github.io/posts/sync-primitives-semaphores/" />
+<meta property="article:published_time" content="2020-11-27T20:00:00-06:00" />
+<meta property="article:modified_time" content="2020-11-27T20:00:00-06:00" />
+
+
+    <title>
+  Implementing Synchronization Primitives in Rust: Semaphores · Sean Chen&#39;s Blog
+</title>
+
+    
+      <link rel="canonical" href="https://seanchen1991.github.io/posts/sync-primitives-semaphores/">
+    
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://seanchen1991.github.io/fonts/forkawesome-webfont.woff2?v=1.1.7" as="font" type="font/woff2" crossorigin>
+
+    
+      
+      
+      <link rel="stylesheet" href="https://seanchen1991.github.io/css/coder.min.f48a4da9bd32cecaff90717ae85529411dd087c10fc0dfca9c9c329c7327e5e1.css" integrity="sha256-9IpNqb0yzsr/kHF66FUpQR3Qh8EPwN/KnJwynHMn5eE=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://seanchen1991.github.io/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://seanchen1991.github.io/images/favicon-16x16.png" sizes="16x16">
+
+    <link rel="apple-touch-icon" href="https://seanchen1991.github.io/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://seanchen1991.github.io/images/apple-touch-icon.png">
+
+    
+
+    <meta name="generator" content="Hugo 0.71.1" />
+  </head>
+
+  
+  
+  <body class="colorscheme-light"
+        onload=""
+  >
+    
+<div class="float-container">
+    <a id="dark-mode-toggle" class="colorscheme-toggle">
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+
+
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://seanchen1991.github.io/">
+      Sean Chen&#39;s Blog
+    </a>
+    
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://seanchen1991.github.io/posts/">Blog</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://seanchen1991.github.io/about/">About</a>
+            </li>
+          
+        
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">
+            <a class="title-link" href="https://seanchen1991.github.io/posts/sync-primitives-semaphores/">
+              Implementing Synchronization Primitives in Rust: Semaphores
+            </a>
+          </h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime='2020-11-27T20:00:00-06:00'>
+                November 27, 2020
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              4-minute read
+            </span>
+          </div>
+          
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <a href="https://seanchen1991.github.io/tags/rust/">Rust</a>
+      <span class="separator">•</span>
+    <a href="https://seanchen1991.github.io/tags/synchronization-primitives/">Synchronization Primitives</a>
+      <span class="separator">•</span>
+    <a href="https://seanchen1991.github.io/tags/the-little-book-of-semaphores/">The Little Book of Semaphores</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        
+<div class="notices note" >
+    <p>I recently stumbled upon Allen Downey’s <a href="https://greenteapress.com/wp/semaphores"><em>The Little Book of Semaphores</em></a>, which is a short, sweet, and to-the-point textbook on the topic of synchronization.</p>
+<p>Naturally, reading through the book inspired me to implement these synchronization primitives and problems in Rust.</p>
+<p>I hope others find this exploration interesting, insightful, and/or helpful! 🙂</p>
+
+</div>
+<p>Implementing synchronization primitives in Rust in a safe fashion is a bit strange in a circular kind of way. It’s similar to implementing a hash map in JavaScript: since everything in JS boils down to an Object, you’re essentially implementing a hash map using hash maps!</p>
+<p>Similarly, for this semaphore implementation we’ll be using standard library types that are “more complex” from a conceptual and implementation standpoint than the primitive we’re actually implementing.</p>
+<p>I’m sure there’s a more low-level way to do this in Rust that better captures the primitive nature of these primitives, but that likely involves writing unsafe code and I’m just not comfortable enough yet with that. Maybe in the future, this will be something I’ll revisit!</p>
+<h2 id="what-are-semaphores">
+  What are Semaphores?
+  <a class="heading-link" href="#what-are-semaphores">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>Semaphores are one of the simplest synchronization primitives upon which more complex tools (such as mutexes, barriers, etc.) can be built upon.</p>
+<p>Conceptually, a semaphore is just an integer that can only be incremented and decremented in an atomic fashion. You can imagine that the integer represents some number of resources that only a certain number of threads are able to access or acquire at the same time.</p>
+
+<div class="notices info" >
+    <p>The term <em>atomic</em> means that even when multiple threads are all attempting to change the value of the semaphore, those changes occur in a sequential (and thus deterministic) order.</p>
+
+</div>
+<p>There are different implications depending on whether the integer is in a positive or negative state. If it’s in a positive state <code>n</code>, this means that <code>n</code> threads are able to access the protected resource. If it’s in a negative state <code>-n</code>, this means that <code>n</code> threads are all blocked and waiting for access to the protected resource.</p>
+<h2 id="a-basic-semaphore-implementation">
+  A Basic Semaphore Implementation
+  <a class="heading-link" href="#a-basic-semaphore-implementation">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>From the above description, our semaphore will contain an integer that can only be access in an atomic fashion. It will need a method that allows a thread to access the underlying critical section and increment the atomic integer in the process. It will also need a method that allows a thread to decrement the atomic integer and signal a waiting thread (assuming there is at least one) that they may acquire the semaphore.</p>
+<p>This is where what I said earlier about using more “advanced” synchronization primitives to implement a simpler one comes into play. In order to notify one of the threads waiting on the semaphore, we’ll need to make use of a <a href="https://doc.rust-lang.org/std/sync/struct.Condvar.html">condition variable</a>, which is the tool that facilitates threads waiting for their turn. It’s also what allows the semaphore to notify a waiting thread that they may not acquire the semaphore.</p>
+<p>In conjunction with a condition variable, we’ll also be using a <code>Mutex</code> to ensure that our integer is only ever accessed by one thread at a time.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::sync::{Mutex,<span style="color:#bbb"> </span>Condvar};<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">Semaphore</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>condvar: <span style="color:#0e84b5;font-weight:bold">Condvar</span>::new(),<span style="color:#bbb">	
+</span><span style="color:#bbb">    </span>counter: <span style="color:#0e84b5;font-weight:bold">Mutex</span><span style="color:#666">&lt;</span><span style="color:#902000">isize</span><span style="color:#666">&gt;</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>Now let’s add our two methods. We’ll call the method that decrements the semaphore <code>acquire</code> to communicate the fact that when a thread calls this method, it’s acquiring one of the protected resources:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>Semaphore<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">acquire</span>(<span style="color:#666">&amp;</span>self)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// gain access to the atomic integer 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>count<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.counter.lock().unwrap();<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// wait so long as the value of the integer &lt;= 0
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">while</span><span style="color:#bbb"> </span><span style="color:#666">*</span>count<span style="color:#bbb"> </span><span style="color:#666">&lt;=</span><span style="color:#bbb"> </span><span style="color:#40a070">0</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>count<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.condvar.wait(count).unwrap();<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// decrement our count to indicate that we acquired
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// one of the resources
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#666">*</span>count<span style="color:#bbb"> </span><span style="color:#666">-=</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span>;<span style="color:#bbb">	
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>We’ll call the second method that increments the semaphore <code>release</code> to indicate the fact that it’s releasing one of the protected resources so that another waiting thread may access it:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>Semaphore<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>...<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">release</span>(<span style="color:#666">&amp;</span>self)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// gain access to the atomic integer
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>count<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.counter.lock().unwrap();<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// increment its value 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span><span style="color:#666">*</span>count<span style="color:#bbb"> </span><span style="color:#666">+=</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// notify one of the waiting threads 
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span>self.condvar.notify_one();<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>And that should do it for our (relatively) basic semaphore implementation!</p>
+<p>Let’s go ahead and wrap this up by adding a few tests:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020">#[cfg(test)]</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">mod</span> <span style="color:#0e84b5;font-weight:bold">tests</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">super</span>::Semaphore;<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::thread;<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::sync::Arc;<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::sync::mpsc::channel;<span style="color:#bbb">
+</span><span style="color:#bbb">  
+</span><span style="color:#bbb">    </span><span style="color:#007020">#[test]</span><span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">test_sem_acquire_release</span>()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>sem<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>Semaphore::new(<span style="color:#40a070">1</span>);<span style="color:#bbb">
+</span><span style="color:#bbb">	  
+</span><span style="color:#bbb">	    </span>sem.acquire();<span style="color:#bbb">
+</span><span style="color:#bbb">	    </span>sem.release();<span style="color:#bbb">
+</span><span style="color:#bbb">	    </span>sem.acquire();<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">  
+</span><span style="color:#bbb">    </span><span style="color:#007020">#[test]</span><span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">test_child_waits_parent_signals</span>()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>s1<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>Arc::new(Semaphore::new(<span style="color:#40a070">0</span>));<span style="color:#bbb">
+</span><span style="color:#bbb">	    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>s2<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>s1.clone();<span style="color:#bbb">
+</span><span style="color:#bbb">	  
+</span><span style="color:#bbb">	    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>(tx,<span style="color:#bbb"> </span>rx)<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>channel();<span style="color:#bbb">
+</span><span style="color:#bbb">	  
+</span><span style="color:#bbb">	    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>_t<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>thread::spawn(<span style="color:#007020;font-weight:bold">move</span><span style="color:#bbb"> </span><span style="color:#666">||</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		    </span>s2.acquire();<span style="color:#bbb">
+</span><span style="color:#bbb">		    </span>tx.send(()).unwrap();<span style="color:#bbb">
+</span><span style="color:#bbb">	    </span>});<span style="color:#bbb">
+</span><span style="color:#bbb">	  
+</span><span style="color:#bbb">	    </span>s1.release();<span style="color:#bbb">
+</span><span style="color:#bbb">	    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>_<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>rx.recv();<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">  
+</span><span style="color:#bbb">    </span><span style="color:#007020">#[test]</span><span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">test_parent_waits_child_signals</span>()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>s1<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>Arc::new(Semaphore::new(<span style="color:#40a070">0</span>));<span style="color:#bbb">
+</span><span style="color:#bbb">	    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>s2<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>s1.clone();<span style="color:#bbb">
+</span><span style="color:#bbb">	  
+</span><span style="color:#bbb">	    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>(tx,<span style="color:#bbb"> </span>rx)<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>channel();<span style="color:#bbb">
+</span><span style="color:#bbb">	  
+</span><span style="color:#bbb">	    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>_t<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>thread::spawn(<span style="color:#007020;font-weight:bold">move</span><span style="color:#bbb"> </span><span style="color:#666">||</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		    </span>s2.release();<span style="color:#bbb">
+</span><span style="color:#bbb">		    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>_<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>rx.recv();<span style="color:#bbb">
+</span><span style="color:#bbb">	    </span>});<span style="color:#bbb">
+</span><span style="color:#bbb">	  
+</span><span style="color:#bbb">	    </span>s1.acquire();<span style="color:#bbb">
+</span><span style="color:#bbb">	    </span>tx.send(()).unwrap();<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>In the next post we’ll be using our homebrew semaphore to implement some other synchronization primitives!</p>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      
+  <footer class="footer">
+    <section class="container">
+      
+      
+        ©
+        
+        2021
+         Sean Chen 
+      
+      
+         · 
+        Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+      
+      
+    </section>
+  </footer>
+
+
+    </main>
+
+    
+      
+        
+        <script src="https://seanchen1991.github.io/js/dark-mode.min.0213e1773e6d1c5a644f847c67a6f8abac49a3776e2976f6008038af8c5b76a1.js"></script>
+      
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+  </body>
+
+</html>

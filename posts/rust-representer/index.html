@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Language" content="en">
+    
+
+    <meta name="author" content="Sean Chen">
+    <meta name="description" content="I’ve been helping out and contributing to exercism.io for the past few months. As an open source platform for learning programming languages that supports Rust, Exercism aligns very well with all the things I’m currently passionate about: open source, teaching, and Rust.
+One of the most challenging hurdles the Exercism platform faces is the fact that students who opt in to receive mentor feedback on their work have to wait for a live person to get around to reviewing their submission.">
+    <meta name="keywords" content="blog,personal,developer,teacher">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Some Learnings from Implementing a Normalizing Rust Representer"/>
+<meta name="twitter:description" content="I’ve been helping out and contributing to exercism.io for the past few months. As an open source platform for learning programming languages that supports Rust, Exercism aligns very well with all the things I’m currently passionate about: open source, teaching, and Rust.
+One of the most challenging hurdles the Exercism platform faces is the fact that students who opt in to receive mentor feedback on their work have to wait for a live person to get around to reviewing their submission."/>
+
+    <meta property="og:title" content="Some Learnings from Implementing a Normalizing Rust Representer" />
+<meta property="og:description" content="I’ve been helping out and contributing to exercism.io for the past few months. As an open source platform for learning programming languages that supports Rust, Exercism aligns very well with all the things I’m currently passionate about: open source, teaching, and Rust.
+One of the most challenging hurdles the Exercism platform faces is the fact that students who opt in to receive mentor feedback on their work have to wait for a live person to get around to reviewing their submission." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://seanchen1991.github.io/posts/rust-representer/" />
+<meta property="article:published_time" content="2020-07-13T11:50:00-07:00" />
+<meta property="article:modified_time" content="2020-07-13T11:50:00-07:00" />
+
+
+    <title>
+  Some Learnings from Implementing a Normalizing Rust Representer · Sean Chen&#39;s Blog
+</title>
+
+    
+      <link rel="canonical" href="https://seanchen1991.github.io/posts/rust-representer/">
+    
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://seanchen1991.github.io/fonts/forkawesome-webfont.woff2?v=1.1.7" as="font" type="font/woff2" crossorigin>
+
+    
+      
+      
+      <link rel="stylesheet" href="https://seanchen1991.github.io/css/coder.min.f48a4da9bd32cecaff90717ae85529411dd087c10fc0dfca9c9c329c7327e5e1.css" integrity="sha256-9IpNqb0yzsr/kHF66FUpQR3Qh8EPwN/KnJwynHMn5eE=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://seanchen1991.github.io/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://seanchen1991.github.io/images/favicon-16x16.png" sizes="16x16">
+
+    <link rel="apple-touch-icon" href="https://seanchen1991.github.io/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://seanchen1991.github.io/images/apple-touch-icon.png">
+
+    
+
+    <meta name="generator" content="Hugo 0.71.1" />
+  </head>
+
+  
+  
+  <body class="colorscheme-light"
+        onload=""
+  >
+    
+<div class="float-container">
+    <a id="dark-mode-toggle" class="colorscheme-toggle">
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+
+
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://seanchen1991.github.io/">
+      Sean Chen&#39;s Blog
+    </a>
+    
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://seanchen1991.github.io/posts/">Blog</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://seanchen1991.github.io/about/">About</a>
+            </li>
+          
+        
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">
+            <a class="title-link" href="https://seanchen1991.github.io/posts/rust-representer/">
+              Some Learnings from Implementing a Normalizing Rust Representer
+            </a>
+          </h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime='2020-07-13T11:50:00-07:00'>
+                July 13, 2020
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              7-minute read
+            </span>
+          </div>
+          
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <a href="https://seanchen1991.github.io/tags/rust/">Rust</a>
+      <span class="separator">•</span>
+    <a href="https://seanchen1991.github.io/tags/exercism/">Exercism</a>
+      <span class="separator">•</span>
+    <a href="https://seanchen1991.github.io/tags/open-source/">Open Source</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        <p>I’ve been helping out and contributing to <a href="https://exercism.io">exercism.io</a> for the past few months. As an open source platform for learning programming languages that supports Rust, Exercism aligns very well with all the things I’m currently passionate about: open source, teaching, and Rust.</p>
+<p>One of the most challenging hurdles the Exercism platform faces is the fact that students who opt in to receive mentor feedback on their work have to wait for a live person to get around to reviewing their submission. Decreasing wait times for students is thus an important metric to optimize for in order to improve the overall student experience on the platform.</p>
+<p>In this post I’ll be talking about a project I’ve been working on that aims to address this problem. I’ll also be discussing the learnings I’ve been taking away from working on this project, as it’s my first non-toy Rust project that I’ve undertaken.</p>
+<h2 id="how-do-we-decrease-wait-times-for-students">
+  How Do We Decrease Wait Times for Students?
+  <a class="heading-link" href="#how-do-we-decrease-wait-times-for-students">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>There are a couple of factors that contribute to longer waiting times for students on the Exercism platform: the availability of mentors, the number of pending submissions in the queue, and how much time it takes for a mentor to compose their feedback response to any one exercise.</p>
+<p>Perhaps in the future, there will be a purely-autonomous system that is able to provide high quality tailored feedback in response to a student’s code submission. However, at this point in time, when it comes to giving human-centric feedback, I don’t believe computers are up to snuff yet.</p>
+<p>So the question becomes: how do we streamline the process through which Exercism mentors provide feedback to students?</p>
+<p>One thing that would help would be to reduce the set of possible configurations of student submissions, at least from the perspective of mentors. Submissions can be normalized by stripping away trivial aspects, such as formatting, comments, and variable names, that don’t contribute to making a submission unique as far as its logical approach.</p>
+<p>For example, given the following student implementation of an Exercism exercise called <code>two-fer</code></p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">twofer</span>(name: <span style="color:#007020">&amp;</span><span style="color:#902000">str</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">String</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">match</span><span style="color:#bbb"> </span>name<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#4070a0">&#34;&#34;</span><span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span><span style="color:#4070a0">&#34;One for you, one for me.&#34;</span>.to_string(),<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#60a0b0;font-style:italic">// use the `format!` macro to return a formatted String
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">        </span>_<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>format<span style="color:#666">!</span>(<span style="color:#4070a0">&#34;One for {}, one for me.&#34;</span>,<span style="color:#bbb"> </span>name),<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>would be transformed into the following:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">PLACEHOLDER_1</span>(PLACEHOLDER_2: <span style="color:#007020">&amp;</span><span style="color:#902000">str</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">String</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">match</span><span style="color:#bbb"> </span>PLACEHOLDER_2<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#4070a0">&#34;&#34;</span><span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span><span style="color:#4070a0">&#34;One for you, one for me.&#34;</span>.to_string(),<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>_<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>format<span style="color:#666">!</span>(<span style="color:#4070a0">&#34;One for {}, one for me.&#34;</span>,<span style="color:#bbb"> </span>PLACEHOLDER_2),<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>This is the job of a program called a representer. In Exercism, each language track will have its own representer to handle submissions for that particular track. When I noticed that the Rust track didn’t yet have a representer that was being worked on, I jumped at the chance to work on it!</p>
+<h2 id="implementing-a-rust-representer">
+  Implementing a Rust Representer
+  <a class="heading-link" href="#implementing-a-rust-representer">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>At a high level, the steps a normalizing representer needs to take are the following:</p>
+<ol>
+<li>Parse the source code into an abstract syntax tree.</li>
+<li>Apply transformations to the appropriate tree nodes.</li>
+<li>Turn the tree back into a string representing the transformed source code.</li>
+</ol>
+<p>The <code>syn</code> <a href="https://docs.rs/syn/1.0.33/syn/index.html">crate</a> is perhaps one of the most robust libraries available in the Rust ecosystem for parsing and transforming Rust code. It’s primary use-case is as a utility for implementing procedural macros in Rust, but judging from its thorough documentation, it seemed full-featured enough to handle the use-case I had in mind.</p>
+<p>The first step I took was to use the functionality provided by <code>syn</code> to parse some source code into an AST, print the AST, and then turn that AST back into a string:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::env;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::fs::File;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::io::prelude::<span style="color:#666">*</span>;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::io::Read;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::process;<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">main</span>()<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">Result</span><span style="color:#666">&lt;</span>(),<span style="color:#bbb"> </span><span style="color:#007020">Box</span><span style="color:#666">&lt;</span>dyn<span style="color:#bbb"> </span>std::error::Error<span style="color:#666">&gt;&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>output_path<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="">“</span>.<span style="color:#666">/</span>output.rs<span style="">”</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>args<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>end::args();<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>_<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>args.next();<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>filename<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">match</span><span style="color:#bbb"> </span>(args.next(),<span style="color:#bbb"> </span>args.next())<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>(<span style="color:#007020">Some</span>(filename),<span style="color:#bbb"> </span><span style="color:#007020">None</span>)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>filename,<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>_<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>eprintln<span style="color:#666">!</span>(<span style="">“</span>Usage: <span style="color:#0e84b5;font-weight:bold">representer</span><span style="color:#bbb"> </span>path<span style="color:#666">/</span>to<span style="color:#666">/</span>filename.rs<span style="">”</span>);<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>process::exit(<span style="color:#40a070">1</span>);<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>};<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>input<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>File::open(<span style="color:#666">&amp;</span>filename)<span style="color:#666">?</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>src<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020">String</span>::new();<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>input.read_to_string(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>src)<span style="color:#666">?</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>syntax<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>syn::parse_file(<span style="color:#666">&amp;</span>src)<span style="color:#666">?</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>println<span style="color:#666">!</span>(<span style="">“</span>{:<span style="color:#666">?</span>}<span style="">”</span>,<span style="color:#bbb"> </span>syntax);<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>output<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>File::create(output_path)<span style="color:#666">?</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>output.write(syntax.to_string().as_bytes())<span style="color:#666">?</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#007020">Ok</span>(())<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>Starting off with this sets up a nice boundary in which we can work within. Now we’ll need to work out how we’ll traverse the AST and transform the relevant tree nodes.</p>
+<h2 id="syns-visitmut-trait">
+  <code>syn</code>’s <code>VisitMut</code> Trait
+  <a class="heading-link" href="#syns-visitmut-trait">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>The <code>syn</code> crate provides an extremely handy trait called <code>VisitMut</code>, which provides the user with a lot of flexibility when it comes to traversing and mutating AST nodes in-place. The <code>VisitMut</code> trait exposes a whole slew of methods for accessing every type of AST node that <code>syn</code> differentiates.</p>
+<p><img src="visit_mut_methods.png" alt="Just some of the methods on the visit_mut trait"></p>
+<p>A logical first place to start would be replacing the identifier name of a <code>let</code> binding, taking something as simple as</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>x<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#40a070">5</span>;<span style="color:#bbb">
+</span></code></pre></div><p>and transforming it into</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>PLACEHOLDER<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#40a070">5</span>;<span style="color:#bbb">
+</span></code></pre></div><p>The <code>visit_pat_ident_mut</code> method is what we’re looking for. It gives us access to AST nodes that represent variable binding patterns, of which <code>let</code> bindings are one of.</p>
+<p>Since <code>visit_pat_ident_mut</code> is a trait method, we need to implement the <code>VisitMut</code> trait on a type so that the method’s behavior can be overwritten. To start off with, I defined an empty struct for this purpose:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>proc_macro2::{Ident,<span style="color:#bbb"> </span>Span};<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>syn::visit_mut::VisitMut;<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">IdentVisitor</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>VisitMut<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>IdentVisitor<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">visit_pat_ident_mut</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>node: <span style="color:#007020">&amp;</span><span style="color:#0e84b5;font-weight:bold">mut</span><span style="color:#bbb"> </span>PatIdent)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#60a0b0;font-style:italic">// replace the node’s ident field with “PLACEHOLDER”
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">		</span>self.ident<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>Ident::new(<span style="">“</span>PLACEHOLDER<span style="">”</span>,<span style="color:#bbb"> </span>Span::call_site());<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>Lo and behold, this simple logic worked! Top-level let bindings were traversed, with their variable names replaced with <code>&quot;PLACEHOLDER&quot;</code>.</p>
+<h2 id="generating-placeholder-ids">
+  Generating Placeholder IDs
+  <a class="heading-link" href="#generating-placeholder-ids">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>Turning our attention to replacing multiple variable names, we’ll need to generate IDs for each placeholder, so that mentors are able to differentiate between bindings with different patterns in the original submission.</p>
+<p>One way to accommodate this is to store a global <code>HashMap</code> of all the generated mappings. This way, we can tell if an identifier has been encountered before, in which we’ll re-use the same generated placeholder; otherwise a new placeholder will be generated.</p>
+<p>This is where our thus-far empty <code>IdentVisitor</code> struct comes in handy: we’ll define the hash map as a field on it.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust">...<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::collections::HashMap;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::collections::hash_map::Entry;<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">const</span><span style="color:#bbb"> </span>PLACEHOLDER: <span style="color:#007020">&amp;</span><span style="color:#902000">str</span> <span style="color:#666">=</span><span style="color:#bbb"> </span><span style="">“</span>PLACEHOLDER_<span style="">”</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">IdentVisitor</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>mappings: <span style="color:#0e84b5;font-weight:bold">HashMap</span><span style="color:#666">&lt;</span><span style="color:#007020">String</span>,<span style="color:#bbb"> </span><span style="color:#902000">u32</span><span style="color:#666">&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#60a0b0;font-style:italic">// a monotonically-increasing counter for new placeholders
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">	</span>uid: <span style="color:#902000">u32</span>,<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>IdentVisitor<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">new</span>()<span style="color:#bbb"> </span>-&gt; <span style="color:#0e84b5;font-weight:bold">Self</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>IdentVisitor<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>mappings: <span style="color:#0e84b5;font-weight:bold">HashMap</span>::new(),<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>uid: <span style="color:#40a070">0</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span></code></pre></div><p>We’ll then also add a method to either fetch a pre-existing placeholder, or generate a new one if the identifier doesn’t yet exist as a mapping:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>IdentVisitor<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>...<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">get_or_insert_mapping</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>ident: <span style="color:#007020">String</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">String</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>uid<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">match</span><span style="color:#bbb"> </span>self.mappings.entry(ident)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>Entry::Occupied(o)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>o.into_mut(),<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>Entry::Vacant(v)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">				</span>self.uid<span style="color:#bbb"> </span><span style="color:#666">+=</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">				</span>v.insert(self.uid);<span style="color:#bbb">
+</span><span style="color:#bbb">			</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>};<span style="color:#bbb">
+</span><span style="color:#bbb">		
+</span><span style="color:#bbb">		</span>format<span style="color:#666">!</span>(<span style="">“</span>{}{}<span style="">”</span>,<span style="color:#bbb"> </span>PLACEHOLDER,<span style="color:#bbb"> </span>uid)<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>We can now refactor our <code>visit_pat_ident_mut</code> method to use <code>get_or_insert_mapping</code>:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>VisitMut<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>IdentVisitor<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">visit_pat_ident_mut</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>node: <span style="color:#007020">&amp;</span><span style="color:#0e84b5;font-weight:bold">mut</span><span style="color:#bbb"> </span>PatIdent)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>placeholder<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.get_or_insert_mapping(node.ident.to_string());<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.ident<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>Ident::new(placeholder,<span style="color:#bbb"> </span>Span::call_site());<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>Huzzah! Multiple let bindings are now replaced with placeholders that each have a different ID:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>PLACEHOLDER_1<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#40a070">5</span>;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>PLACEHOLDER_2<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#40a070">15</span>;<span style="color:#bbb">
+</span></code></pre></div><h2 id="eliminating-duplicated-code-with-traits">
+  Eliminating Duplicated Code with Traits
+  <a class="heading-link" href="#eliminating-duplicated-code-with-traits">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>With variable bindings out of the way, much of the way forward involves accessing every other type of AST node that contains identifiers that we’d like to replace: struct names, enum names, user-defined types, function definitions, etc.</p>
+<p>Struct names can be accessed via the <code>visit_item_struct_mut</code> method. Recycling the same logic we used for transforming let binding identifiers, we can write:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>VisitMut<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>IdentVisitor<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>...<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">visit_item_struct_mut</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>node: <span style="color:#007020">&amp;</span><span style="color:#0e84b5;font-weight:bold">mut</span><span style="color:#bbb"> </span>ItemStruct)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>placeholder<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.get_or_insert_mapping(node.ident.to_strong());<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.ident<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>Ident::new(placeholder,<span style="color:#bbb"> </span>Span::call_site());<span style="color:#bbb">	
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>For certain types of AST nodes (such as the <code>Expr</code> type that encapsulates Rust expressions), the logic can certainly get more complicated, but this is the general gist of the overall pattern.</p>
+<p>One piece of advice I was given by a much more experienced Rust developer was to implement a new trait to represent the ability of certain nodes to have their identifier replaced. While doing such a thing won’t actually allow us to significantly reduce the total SLOCs of the implementation as it stands now, it will improve future maintainability of the codebase. Plus, I’d never really been presented with a relevant opportunity to implement a Rust trait, so I jumped at the chance to do it in a “real” Rust project.</p>
+<p>The trait I ended up implementing exposes two methods: <code>ident_string</code>, which ensures that the AST node has an identifier that can be replaced, and <code>set_ident</code>, which replaces the node’s identifier with a specified string:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">trait</span><span style="color:#bbb"> </span>ReplaceIdentifier<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">ident_string</span>(<span style="color:#666">&amp;</span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">String</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">set_ident</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>ident: <span style="color:#007020">String</span>);<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>Now, we’ll implement this trait on nodes that have an identifier, which include the aforementioned <code>PatIdent</code> and <code>ItemStruct</code>, as well as many others:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>ReplaceIdentifier<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>PatIdent<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">ident_string</span>(<span style="color:#666">&amp;</span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">String</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.ident.to_string()<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">set_ident</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>ident: <span style="color:#007020">String</span>)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.ident<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>Ident::new(ident,<span style="color:#bbb"> </span>Span::call_site());<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>ReplaceIdentifier<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>ItemStruct<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">ident_string</span>(<span style="color:#666">&amp;</span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">String</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.ident.to_string()<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">set_ident</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>ident: <span style="color:#007020">String</span>)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>self.ident<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>Ident::new(ident,<span style="color:#bbb"> </span>Span::call_site());<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>I then opted to implement a <code>replace_identifier</code> method for any type that implements the <code>ReplaceIdentifier</code> trait:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>IdentVisitor<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>...<span style="color:#bbb">
+</span><span style="color:#bbb">	
+</span><span style="color:#bbb">	</span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">replace_identifier</span><span style="color:#666">&lt;</span>Node: <span style="color:#0e84b5;font-weight:bold">ReplaceIdentifier</span><span style="color:#666">&gt;</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>node: <span style="color:#0e84b5;font-weight:bold">Node</span>)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>ident_string<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>node.ident_string();<span style="color:#bbb">
+</span><span style="color:#bbb">		</span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>identifier<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>self.get_or_insert_mapping(ident_string);<span style="color:#bbb">
+</span><span style="color:#bbb">		</span>node.set_ident(identifier);<span style="color:#bbb">
+</span><span style="color:#bbb">	</span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>Following this, we’ll change our various <code>visit_mut</code> methods to utilize <code>replace_identifier</code>:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>IdentVisitor<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">  </span>...<span style="color:#bbb">
+</span><span style="color:#bbb">  
+</span><span style="color:#bbb">  </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">visit_pat_ident_mut</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>node: <span style="color:#007020">&amp;</span><span style="color:#0e84b5;font-weight:bold">mut</span><span style="color:#bbb"> </span>PatIdent)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	  </span>self.replace_identifier(node);<span style="color:#bbb">
+</span><span style="color:#bbb">  </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">  
+</span><span style="color:#bbb">  </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">visit_item_struct_mut</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>node: <span style="color:#007020">&amp;</span><span style="color:#0e84b5;font-weight:bold">mut</span><span style="color:#bbb"> </span>ItemStruct)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">	  </span>self.replace_identifier(node);<span style="color:#bbb">
+</span><span style="color:#bbb">  </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>Refactoring the code in this way clearly separates concerns: the <code>visit_mut</code> methods access the AST nodes we care about, the  <code>ReplaceIdentifier</code> trait lays out the contract that nodes need to adhere to, which the <code>replace_identifier</code> method can then act upon.</p>
+<p>It was so cool to me to have gotten an opportunity to utilize traits in such a way when implementing this project. Before this, I’d only ever had a vague understanding of traits. Using them in this way in this project really served to hammer home the point of why traits are useful and when are appropriate times to use them.</p>
+<h2 id="in-closing">
+  In Closing
+  <a class="heading-link" href="#in-closing">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>While the portrait of the representer that I’ve painted in this post is quite simplified (some types of Rust syntax, such as expressions, are a bit more complex to handle), it preserves the kernel of how the representer functions. If you’re interested, you can keep track of my progress <a href="https://github.com/exercism/rust-representer">here</a>.</p>
+<p>If you’re interested in contributing to this sort of project, or helping out as a mentor for those looking to sharpen their programming skills, <a href="https://exercism.io">Exercism</a> is always looking for more open source contributors, maintainers, and mentors, especially with our in-progress <a href="https://github.com/exercism/v3">V3</a> push!</p>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      
+  <footer class="footer">
+    <section class="container">
+      
+      
+        ©
+        
+        2021
+         Sean Chen 
+      
+      
+         · 
+        Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+      
+      
+    </section>
+  </footer>
+
+
+    </main>
+
+    
+      
+        
+        <script src="https://seanchen1991.github.io/js/dark-mode.min.0213e1773e6d1c5a644f847c67a6f8abac49a3776e2976f6008038af8c5b76a1.js"></script>
+      
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+  </body>
+
+</html>
