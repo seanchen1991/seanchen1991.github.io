@@ -290,14 +290,15 @@ arrayvec = “0.5.2”
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>arrayvec::ArrayVec;<span style="color:#bbb">
 </span><span style="color:#bbb">
 </span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">LRUCache</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
-</span><span style="color:#bbb">  </span><span style="color:#4070a0;font-style:italic">/// Our `ArrayVec` will be storing `Entry`s 
-</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">  </span>entries: <span style="color:#0e84b5;font-weight:bold">ArrayVec</span><span style="color:#666">&lt;</span>Entry<span style="color:#666">&gt;</span>,<span style="color:#bbb">
-</span><span style="color:#bbb">  </span><span style="color:#4070a0;font-style:italic">/// Index of the first entry in the cache
-</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">  </span>head: <span style="color:#902000">usize</span>,<span style="color:#bbb">
-</span><span style="color:#bbb">  </span><span style="color:#4070a0;font-style:italic">/// Index of the last entry in the cache
-</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">  </span>tail: <span style="color:#902000">usize</span>,<span style="color:#bbb">
-</span><span style="color:#bbb">  </span><span style="color:#4070a0;font-style:italic">/// The number of entries in the cache
-</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">  </span>length: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Our `ArrayVec` will be storing `Entry`s 
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span>entries: <span style="color:#0e84b5;font-weight:bold">ArrayVec</span><span style="color:#666">&lt;</span>Entry<span style="color:#666">&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Index of the first entry in the cache
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span>head: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// Index of the last entry in the cache
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span>tail: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">	</span><span style="color:#4070a0;font-style:italic">/// The number of entries in the cache
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">	</span>length: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
 </span></code></pre></div><p>If you try compiling what we have so far with <code>cargo build</code>, you should get an error like this:</p>
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">error[E0107]: wrong number of type arguments: expected 1, found 0
   --&gt; src/main.rs:11:23
@@ -325,6 +326,7 @@ error: aborting due to previous error
 </span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">	</span>head: <span style="color:#902000">usize</span>,<span style="color:#bbb">
 </span><span style="color:#bbb">	</span>tail: <span style="color:#902000">usize</span>,<span style="color:#bbb">
 </span><span style="color:#bbb">	</span>length: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
 </span></code></pre></div><p>With these changes in place, our code should compile successfully!</p>
 <h3 id="implementing-methods-for-our-cache">
   Implementing Methods for our Cache
@@ -370,6 +372,7 @@ error: aborting due to previous error
 </span><span style="color:#bbb">	</span>cache: <span style="color:#007020">&amp;</span><span style="">’</span>a<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>LRUCache<span style="color:#666">&lt;</span>A<span style="color:#666">&gt;</span>,<span style="color:#bbb">
 </span><span style="color:#bbb">	</span>pos: <span style="color:#902000">usize</span>,<span style="color:#bbb">
 </span><span style="color:#bbb">	</span>done: <span style="color:#902000">bool</span>,<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
 </span></code></pre></div><p>Our <code>IterMut</code> struct needs a mutable reference to our cache itself so that mutable references can be handed out from it. This mutable reference to the cache needs to be valid for at least as long as the <code>LRUCache</code> itself is valid, which is what the <code>‘a</code> lifetime is specifying.</p>
 <p>Starting off the <code>Iterator</code> implementation for our <code>IterMut</code> type, we continue to use the <code>’a</code> lifetime to specify that <code>T</code> (which the type that is being stored in our <code>Entry</code>s) and the underlying <code>Array</code> type that our <code>LRUCache</code> wraps both live at least as long as our <code>IterMut</code> type.</p>
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">impl</span><span style="color:#666">&lt;</span><span style="">‘</span>a,<span style="color:#bbb"> </span>T,<span style="color:#bbb"> </span>A<span style="color:#666">&gt;</span><span style="color:#bbb"> </span><span style="color:#007020">Iterator</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>IterMut<span style="color:#666">&lt;</span><span style="">‘</span>a,<span style="color:#bbb"> </span>A<span style="color:#666">&gt;</span><span style="color:#bbb">
