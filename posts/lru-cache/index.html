@@ -181,15 +181,15 @@ in the official Rust book is as good a place as any 🙂</p>
 <div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#007020;font-weight:bold">from</span> <span style="color:#0e84b5;font-weight:bold">doubly_linked_list</span> <span style="color:#007020;font-weight:bold">import</span> DoublyLinkedList
 
 <span style="color:#007020;font-weight:bold">class</span> <span style="color:#0e84b5;font-weight:bold">LRUCache</span>:
-  <span style="color:#007020;font-weight:bold">def</span> __init__(self, capacity<span style="color:#666">=</span><span style="color:#40a070">100</span>):
-	  <span style="color:#60a0b0;font-style:italic"># the max number of entries the cache can hold</span>
-	  self<span style="color:#666">.</span>capacity <span style="color:#666">=</span> capacity
-	  <span style="color:#60a0b0;font-style:italic"># the hash map for storing entries as key-value pairs </span>
-	  <span style="color:#60a0b0;font-style:italic"># it’s what allows us to efficiently fetch entries </span>
-	  self<span style="color:#666">.</span>storage <span style="color:#666">=</span> <span style="color:#007020">dict</span>()
-	  <span style="color:#60a0b0;font-style:italic"># a doubly linked list for keeping track of the order</span>
-    <span style="color:#60a0b0;font-style:italic"># of elements in our cache </span>
-    self<span style="color:#666">.</span>order <span style="color:#666">=</span> DoublyLinkedList()
+    <span style="color:#007020;font-weight:bold">def</span> __init__(self, capacity<span style="color:#666">=</span><span style="color:#40a070">100</span>):
+	    <span style="color:#60a0b0;font-style:italic"># the max number of entries the cache can hold</span>
+	    self<span style="color:#666">.</span>capacity <span style="color:#666">=</span> capacity
+	    <span style="color:#60a0b0;font-style:italic"># the hash map for storing entries as key-value pairs </span>
+	    <span style="color:#60a0b0;font-style:italic"># it’s what allows us to efficiently fetch entries </span>
+	    self<span style="color:#666">.</span>storage <span style="color:#666">=</span> <span style="color:#007020">dict</span>()
+	    <span style="color:#60a0b0;font-style:italic"># a doubly linked list for keeping track of the order</span>
+    	<span style="color:#60a0b0;font-style:italic"># of elements in our cache </span>
+    	self<span style="color:#666">.</span>order <span style="color:#666">=</span> DoublyLinkedList()
 </code></pre></div>
 <div class="notices note" >
     <p>We won’t be going over the design and implementation of the <code>DoublyLinkedList</code> that we’re using here, though its code is included in the GitHub repo should you wish to take a look.</p>
