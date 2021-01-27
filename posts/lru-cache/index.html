@@ -8,17 +8,17 @@
     
 
     <meta name="author" content="Sean Chen">
-    <meta name="description" content="This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The [chapter][traits-chapter] in the official Rust book is as good a place as any 🙂
+    <meta name="description" content="This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The chapter in the official Rust book is as good a place as any 🙂
  LRU caches are one of my favorite data structures to teach. One way of implementing an LRU cache (in Python, the language that I teach in) requires combining two separate data structures: a hash map in order to enable efficient access via hashing of keys, and a doubly-linked list in order to maintain the ordering of cache elements.">
     <meta name="keywords" content="blog,personal,developer,teacher">
 
     <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Implementing an LRU Cache in Rust"/>
-<meta name="twitter:description" content="This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The [chapter][traits-chapter] in the official Rust book is as good a place as any 🙂
+<meta name="twitter:description" content="This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The chapter in the official Rust book is as good a place as any 🙂
  LRU caches are one of my favorite data structures to teach. One way of implementing an LRU cache (in Python, the language that I teach in) requires combining two separate data structures: a hash map in order to enable efficient access via hashing of keys, and a doubly-linked list in order to maintain the ordering of cache elements."/>
 
     <meta property="og:title" content="Implementing an LRU Cache in Rust" />
-<meta property="og:description" content="This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The [chapter][traits-chapter] in the official Rust book is as good a place as any 🙂
+<meta property="og:description" content="This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The chapter in the official Rust book is as good a place as any 🙂
  LRU caches are one of my favorite data structures to teach. One way of implementing an LRU cache (in Python, the language that I teach in) requires combining two separate data structures: a hash map in order to enable efficient access via hashing of keys, and a doubly-linked list in order to maintain the ordering of cache elements." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://seanchen1991.github.io/posts/lru-cache/" />
@@ -150,7 +150,8 @@
         
         
 <div class="notices note" >
-    <p>This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The [chapter][traits-chapter] in the official Rust book is as good a place as any 🙂</p>
+    <p>This post assumes familiarity with traits in Rust. If you aren’t familiar with them, I’d recommend reading more about them. The <a href="https://docs.rust-lang.org/book/ch10-02-traits.html">chapter</a>
+in the official Rust book is as good a place as any 🙂</p>
 
 </div>
 <p>LRU caches are one of my favorite data structures to teach. One way of implementing an LRU cache (in Python, the language that I teach in) requires combining two separate data structures: a hash map in order to enable efficient access via hashing of keys, and a doubly-linked list in order to maintain the ordering of cache elements.</p>
